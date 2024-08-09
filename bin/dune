@@ -1,0 +1,4 @@
+(executable
+ (public_name exploding_kittens)
+ (name main)
+ (libraries exploding_kittens))

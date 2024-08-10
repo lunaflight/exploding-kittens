@@ -1,4 +1,3 @@
-(executable
- (public_name exploding_kittens)
- (name main)
- (libraries exploding_kittens))
+(executables
+ (names server player)
+ (libraries exploding_kittens_app))

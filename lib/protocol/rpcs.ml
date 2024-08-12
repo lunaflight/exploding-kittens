@@ -5,7 +5,7 @@ module Message = struct
   module Query = struct
     type t = string [@@deriving sexp, bin_io]
 
-    let%expect_test "bin_digest" =
+    let%expect_test _ =
       print_endline [%bin_digest: t];
       [%expect {| d9a8da25d5656b016fb4dbdc2e4197fb |}];
       return ()
@@ -15,7 +15,7 @@ module Message = struct
   module Response = struct
     type t = unit [@@deriving sexp, bin_io]
 
-    let%expect_test "bin_digest" =
+    let%expect_test _ =
       print_endline [%bin_digest: t];
       [%expect {| 86ba5df747eec837f0b391dd49f33f9e |}];
       return ()
@@ -25,6 +25,37 @@ module Message = struct
   let rpc =
     Rpc.Rpc.create
       ~name:"send_message"
+      ~version:0
+      ~bin_query:Query.bin_t
+      ~bin_response:Response.bin_t
+      ~include_in_error_count:Rpc.How_to_recognise_errors.Only_on_exn
+  ;;
+end
+
+module Get_action = struct
+  module Query = struct
+    type t = Card.t list [@@deriving bin_io, sexp]
+
+    let%expect_test _ =
+      print_endline [%bin_digest: t];
+      [%expect {| ae6ebff7b41e4d48f8c66c885140517b |}];
+      return ()
+    ;;
+  end
+
+  module Response = struct
+    type t = Action.t [@@deriving bin_io, sexp]
+
+    let%expect_test _ =
+      print_endline [%bin_digest: t];
+      [%expect {| ff49a477565fc0949e742ca65cf94571 |}];
+      return ()
+    ;;
+  end
+
+  let rpc =
+    Rpc.Rpc.create
+      ~name:"get_action"
       ~version:0
       ~bin_query:Query.bin_t
       ~bin_response:Response.bin_t

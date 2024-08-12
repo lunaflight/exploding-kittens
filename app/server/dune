@@ -1,0 +1,5 @@
+(library
+ (name server_app)
+ (libraries async core protocol_lib)
+ (preprocess
+  (pps ppx_jane)))

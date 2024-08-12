@@ -1,3 +1,3 @@
 (executables
- (names server player)
- (libraries exploding_kittens_app))
+ (names player server)
+ (libraries client_app server_app))

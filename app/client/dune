@@ -1,5 +1,5 @@
 (library
- (name exploding_kittens_app)
+ (name client_app)
  (libraries async core protocol_lib)
  (preprocess
   (pps ppx_jane)))

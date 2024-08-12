@@ -1,1 +1,1 @@
-let () = Command_unix.run Exploding_kittens_app.Player.command
+let () = Command_unix.run Client_app.Client.command

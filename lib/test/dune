@@ -1,6 +1,6 @@
 (library
- (name test_exploding_kittens)
- (libraries core)
+ (name test_protocol_lib)
+ (libraries core protocol_lib)
  (inline_tests)
  (preprocess
   (pps ppx_jane)))

@@ -28,7 +28,7 @@ let%expect_test "draw Powerless -> Drew_successfully" =
     ~deck:(Deck.For_testing.of_card_list [ Powerless Cattermelon; Exploding_kitten ]);
   [%expect
     {|
-    ((outcome Drew_successfully) (hand ((Powerless Cattermelon)))
-     (deck (Exploding_kitten)))
+    ((outcome (Drew_successfully (Powerless Cattermelon)))
+     (hand ((Powerless Cattermelon))) (deck (Exploding_kitten)))
     |}]
 ;;

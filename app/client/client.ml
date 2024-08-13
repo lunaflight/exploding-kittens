@@ -9,21 +9,14 @@ let command =
        flag "port" (required int) ~doc:"PORT the port to listen for RPCs"
      in
      fun () ->
-       let get_action_implementation _client cards =
-         print_s [%message "Make an action" (cards : Card.t list)];
-         (* TODO: Ask the player for an action *)
-         return Action.Draw
-       in
-       let message_implementation _client message =
-         print_s [%message "Received message" (message : string)];
-         Deferred.return ()
-       in
        let implementations =
          Rpc.Implementations.create_exn
            ~on_unknown_rpc:`Close_connection
            ~implementations:
-             [ Rpc.Rpc.implement Rpcs.Get_action.rpc get_action_implementation
-             ; Rpc.Rpc.implement Rpcs.Message.rpc message_implementation
+             [ Rpc.Rpc.implement Rpcs.Get_action.rpc (fun _client hand ->
+                 Logic.get_action ~hand)
+             ; Rpc.Rpc.implement Rpcs.Message.rpc (fun _client message ->
+                 Logic.print_string message |> return)
              ]
        in
        let%bind server =

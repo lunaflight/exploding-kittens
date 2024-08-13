@@ -16,3 +16,5 @@ type t =
 [@@deriving sexp, bin_io]
 
 val all : t list
+val to_string : t -> string
+val string_of_cards : t list -> string

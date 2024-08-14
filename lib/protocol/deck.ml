@@ -26,7 +26,16 @@ let add_exploding_kittens t ~n =
   t @ List.init n ~f:(fun _i -> Card.Exploding_kitten) |> shuffle
 ;;
 
-let draw_cards t ~n = List.split_n t n
+let draw_hand t ~n =
+  if n <= 0 || n > List.length t
+  then
+    Or_error.error_s
+      [%message
+        "Attempting to draw invalid number of cards" (n : int) (List.length t : int)]
+  else (
+    let cards, deck = List.split_n t n in
+    (Hand.of_cards cards, deck) |> Or_error.return)
+;;
 
 let draw t =
   match t with

@@ -16,8 +16,8 @@ let handle t ~hand ~deck =
   | Draw ->
     let%map.Or_error card, deck = Deck.draw deck in
     (match card with
-     | Exploding_kitten -> Outcome.Exploded, card :: hand, deck
-     | _ -> Outcome.Drew_successfully card, card :: hand, deck)
+     | Exploding_kitten -> Outcome.Exploded, Hand.add_card hand ~card, deck
+     | _ -> Outcome.Drew_successfully card, Hand.add_card hand ~card, deck)
 ;;
 
 let of_string t = Or_error.try_with (fun () -> of_string t)

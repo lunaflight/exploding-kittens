@@ -22,5 +22,5 @@ let get_action ~hand =
     | Ok action -> return action
     | Error _ -> make_action' ~prompt:"Unknown action: Try again."
   in
-  make_action' ~prompt:[%string "Your hand: %{Card.string_of_cards hand}"]
+  make_action' ~prompt:[%string "Your hand: %{hand#Hand}"]
 ;;

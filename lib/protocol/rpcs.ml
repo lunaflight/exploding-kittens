@@ -34,11 +34,11 @@ end
 
 module Get_action = struct
   module Query = struct
-    type t = Card.t list [@@deriving bin_io, sexp]
+    type t = Hand.t [@@deriving bin_io, sexp]
 
     let%expect_test _ =
       print_endline [%bin_digest: t];
-      [%expect {| ae6ebff7b41e4d48f8c66c885140517b |}];
+      [%expect {| 552e8c104d50787427dfa16d6968827a |}];
       return ()
     ;;
   end

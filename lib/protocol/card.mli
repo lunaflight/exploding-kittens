@@ -13,8 +13,9 @@ end
 type t =
   | Exploding_kitten
   | Powerless of Powerless.t
-[@@deriving sexp, bin_io]
+[@@deriving bin_io, compare, sexp]
+
+include Comparable.S_binable with type t := t
 
 val all : t list
 val to_string : t -> string
-val string_of_cards : t list -> string

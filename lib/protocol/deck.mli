@@ -15,14 +15,11 @@ val default_without_exploding_kittens : unit -> t
 (** Adds [n] exploding kittens to a deck and shuffles it. *)
 val add_exploding_kittens : t -> n:int -> t
 
-(* TODO: This function should probably return an [Or_error.t] if [n] is
-   negative or more than the deck size. *)
-
 (** Draws [n] number of cards from the deck. It returns a tuple of the drew
     cards and the resulting deck.
-    If [n] is negative, [n] will be set to 0.
-    If [n] is more than the deck size, [n] will be set to the deck size. *)
-val draw_cards : t -> n:int -> Card.t list * t
+    If [n] is negative or if [n] is more than the deck size, an error is
+    returned. *)
+val draw_hand : t -> n:int -> (Hand.t * t) Or_error.t
 
 (** Draws 1 card from the deck. It returns a tuple of the drew card and the resulting deck.
     If the deck is empty, an error is returned. *)

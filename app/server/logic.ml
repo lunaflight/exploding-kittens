@@ -6,7 +6,7 @@ open Protocol_lib
 module Player = struct
   type t =
     { connection : Rpc.Connection.t
-    ; hand : Card.t list
+    ; hand : Hand.t
     }
 
   let get_action t =
@@ -52,7 +52,9 @@ let start ~connections =
          size. *)
       ~init:(Deck.default_without_exploding_kittens () |> Deck.shuffle)
       ~f:(fun deck connection ->
-        let hand, deck = Deck.draw_cards deck ~n:8 in
+        (* TODO: Properly handle re-prompting or printing if the deck is not
+           big enough. *)
+        let hand, deck = Deck.draw_hand deck ~n:8 |> Or_error.ok_exn in
         deck, Player.{ connection; hand })
   in
   gameplay_loop

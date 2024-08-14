@@ -17,7 +17,7 @@ end
 (** Rpc for the server to ask a client for an action given their hand. *)
 module Get_action : sig
   module Query : sig
-    type t = Card.t list
+    type t = Hand.t
   end
 
   module Response : sig

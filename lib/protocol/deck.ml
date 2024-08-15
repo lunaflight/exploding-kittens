@@ -14,6 +14,7 @@ let init_with_counts ~count_of_card =
 let default_without_exploding_kittens () =
   init_with_counts ~count_of_card:(function
     | Exploding_kitten -> 0
+    | Power Skip -> 4
     | Powerless Beard_cat -> 4
     | Powerless Cattermelon -> 4
     | Powerless Hairy_potato_cat -> 4

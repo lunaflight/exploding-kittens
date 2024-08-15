@@ -38,7 +38,7 @@ module Get_action = struct
 
     let%expect_test _ =
       print_endline [%bin_digest: t];
-      [%expect {| 552e8c104d50787427dfa16d6968827a |}];
+      [%expect {| 2b5fccc9bc132fe001a453272bb8c8fb |}];
       return ()
     ;;
   end
@@ -48,7 +48,7 @@ module Get_action = struct
 
     let%expect_test _ =
       print_endline [%bin_digest: t];
-      [%expect {| ff49a477565fc0949e742ca65cf94571 |}];
+      [%expect {| af510da76b19f6ca65b854bfef6fe930 |}];
       return ()
     ;;
   end

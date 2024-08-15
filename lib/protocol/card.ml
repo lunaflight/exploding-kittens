@@ -1,6 +1,12 @@
 open! Core
 open! Async
 
+module Power = struct
+  type t = Skip
+  [@@deriving
+    bin_io, compare, enumerate, sexp, string ~capitalize:"Title Case" ~case_insensitive]
+end
+
 module Powerless = struct
   type t =
     | Beard_cat
@@ -12,10 +18,10 @@ module Powerless = struct
 end
 
 module T = struct
-  (* TODO: Add power cards *)
   type t =
     | Exploding_kitten
-    (* Ensure no [Powerless.t] has the same string representation as [t]. *)
+    (* Ensure no string representations are shared during nesting. *)
+    | Power of Power.t [@nested ""]
     | Powerless of Powerless.t [@nested ""]
   [@@deriving bin_io, compare, enumerate, sexp, string ~capitalize:"Title Case"]
 end

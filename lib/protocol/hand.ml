@@ -18,3 +18,12 @@ let to_string t =
   |> List.map ~f:(fun (card, count) -> [%string "%{count#Int}x %{card#Card}"])
   |> String.concat ~sep:", "
 ;;
+
+let remove_card t ~card =
+  match Map.find t card with
+  | None -> Or_error.error_s [%message "Card is not owned" (card : Card.t) (t : t)]
+  | Some count ->
+    let new_count = count - 1 in
+    (if new_count = 0 then Map.remove t card else Map.set t ~key:card ~data:new_count)
+    |> Or_error.return
+;;

@@ -7,7 +7,7 @@ let command =
     ~summary:"Start a player process"
     (let%map_open.Command port =
        flag "port" (required int) ~doc:"PORT the port to listen for RPCs"
-     in
+     and name = flag "name" (required string) ~doc:"STRING your name" in
      fun () ->
        let implementations =
          Rpc.Implementations.create_exn
@@ -17,6 +17,7 @@ let command =
                  Logic.get_action ~hand)
              ; Rpc.Rpc.implement Rpcs.Message.rpc (fun _client message ->
                  Logic.print_string message |> return)
+             ; Rpc.Rpc.implement Rpcs.Name.rpc (fun _client () -> return name)
              ]
        in
        let%bind server =

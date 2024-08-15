@@ -2,22 +2,6 @@ open! Core
 open! Async
 open Protocol_lib
 
-(* TODO: The player should have a name. This is so logs can be customised. *)
-module Player = struct
-  type t =
-    { connection : Rpc.Connection.t
-    ; hand : Hand.t
-    }
-
-  let get_action t =
-    Rpc.Rpc.dispatch Rpcs.Get_action.rpc t.connection t.hand |> Deferred.Or_error.ok_exn
-  ;;
-
-  let send_message t message =
-    Rpc.Rpc.dispatch Rpcs.Message.rpc t.connection message |> Deferred.Or_error.ok_exn
-  ;;
-end
-
 let rec get_action player ~deck ~prompt =
   let%bind () = Player.send_message player prompt in
   let%bind action = Player.get_action player in
@@ -50,7 +34,7 @@ let rec gameplay_loop ~(players : Player.t list) ~deck =
 ;;
 
 let start ~connections =
-  let deck, players =
+  let deck, connection_and_hands =
     List.fold_map
       connections
       (* TODO: Provide a way to customise the starting deck and starting hand
@@ -60,7 +44,17 @@ let start ~connections =
         (* TODO: Properly handle re-prompting or printing if the deck is not
            big enough. *)
         let hand, deck = Deck.draw_hand deck ~n:8 |> Or_error.ok_exn in
-        deck, Player.{ connection; hand })
+        deck, (connection, hand))
+  in
+  let%bind players =
+    Deferred.List.map
+      ~how:(`Max_concurrent_jobs 16)
+      connection_and_hands
+      ~f:(fun (connection, hand) ->
+        let%map name =
+          Rpc.Rpc.dispatch Rpcs.Name.rpc connection () |> Deferred.Or_error.ok_exn
+        in
+        Player.{ connection; hand; name })
   in
   gameplay_loop
     ~players

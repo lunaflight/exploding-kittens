@@ -5,7 +5,7 @@ open Protocol_lib
 type t =
   { connection : Rpc.Connection.t
   ; hand : Hand.t
-  ; name : string (* TODO: Make use of the name *)
+  ; name : string
   }
 
 let get_action { connection; hand; name = (_ : string) } =

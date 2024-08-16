@@ -30,6 +30,17 @@ module Instant = struct
     in
     { deck; current_player = next_player; other_players }
   ;;
+
+  let broadcast_to_players { deck = (_ : Deck.t); current_player; other_players } ~outcome
+    =
+    let%bind () =
+      Action.Outcome.to_self_alert outcome |> Player.send_message current_player
+    in
+    Nonempty_list.to_list other_players
+    |> Deferred.List.iter ~how:(`Max_concurrent_jobs 16) ~f:(fun player ->
+      Action.Outcome.to_others_alert outcome ~name:current_player.name
+      |> Player.send_message player)
+  ;;
 end
 
 type t =
@@ -50,9 +61,7 @@ let advance instant ~action =
   let%map.Or_error outcome, hand, deck =
     Action.handle action ~hand:current_player.hand ~deck:instant.deck
   in
-  let%map () =
-    Action.Outcome.to_self_alert outcome |> Player.send_message current_player
-  in
+  let%map () = Instant.broadcast_to_players instant ~outcome in
   match outcome with
   | Action.Outcome.Exploded -> remove_current_player instant
   | Action.Outcome.Drew _ | Action.Outcome.Played Skip ->

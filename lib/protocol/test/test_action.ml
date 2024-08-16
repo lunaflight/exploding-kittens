@@ -47,3 +47,45 @@ let%expect_test "unable to parse unknown action" =
      (Error ("Action.of_string: invalid string" (value "unknown action"))))
     |}]
 ;;
+
+let%expect_test "outcome alerts for self look correct - full feedback is given" =
+  Action.Outcome.For_testing.all
+  |> List.iter ~f:(fun outcome ->
+    let alert = Action.Outcome.to_self_alert outcome in
+    print_s [%message (outcome : Action.Outcome.t) (alert : string)]);
+  [%expect
+    {|
+    ((outcome (Drew Exploding_kitten)) (alert "You drew a(n) Exploding Kitten."))
+    ((outcome (Drew (Power Skip))) (alert "You drew a(n) Skip."))
+    ((outcome (Drew (Powerless Beard_cat))) (alert "You drew a(n) Beard Cat."))
+    ((outcome (Drew (Powerless Cattermelon)))
+     (alert "You drew a(n) Cattermelon."))
+    ((outcome (Drew (Powerless Hairy_potato_cat)))
+     (alert "You drew a(n) Hairy Potato Cat."))
+    ((outcome (Drew (Powerless Rainbow_ralphing_cat)))
+     (alert "You drew a(n) Rainbow-ralphing Cat."))
+    ((outcome (Drew (Powerless Tacocat))) (alert "You drew a(n) Tacocat."))
+    ((outcome Exploded) (alert "You exploded!"))
+    ((outcome (Played Skip)) (alert "You played Skip."))
+    |}]
+;;
+
+let%expect_test "outcome alerts for others look correct - sensitive info is omitted" =
+  Action.Outcome.For_testing.all
+  |> List.iter ~f:(fun outcome ->
+    let alert = Action.Outcome.to_others_alert ~name:"Alice" outcome in
+    print_s [%message (outcome : Action.Outcome.t) (alert : string)]);
+  [%expect
+    {|
+    ((outcome (Drew Exploding_kitten)) (alert "Alice drew a card."))
+    ((outcome (Drew (Power Skip))) (alert "Alice drew a card."))
+    ((outcome (Drew (Powerless Beard_cat))) (alert "Alice drew a card."))
+    ((outcome (Drew (Powerless Cattermelon))) (alert "Alice drew a card."))
+    ((outcome (Drew (Powerless Hairy_potato_cat))) (alert "Alice drew a card."))
+    ((outcome (Drew (Powerless Rainbow_ralphing_cat)))
+     (alert "Alice drew a card."))
+    ((outcome (Drew (Powerless Tacocat))) (alert "Alice drew a card."))
+    ((outcome Exploded) (alert "Alice exploded!"))
+    ((outcome (Played Skip)) (alert "Alice played Skip."))
+    |}]
+;;

@@ -6,14 +6,26 @@ module Outcome = struct
     | Drew of Card.t
     | Exploded
     | Played of Card.Power.t
-  [@@deriving sexp_of]
+  [@@deriving enumerate, sexp_of]
 
-  (* TODO: Add a way for other players to get alerted as well. *)
   let to_self_alert = function
-    | Drew card -> [%string "You drew %{card#Card}"]
+    (* TODO: Perhaps we can provide a lookup table to decide between "a" or
+       "an" or download some library that handles this for us. *)
+    | Drew card -> [%string "You drew a(n) %{card#Card}."]
     | Exploded -> [%string "You exploded!"]
-    | Played card -> [%string "You played %{card#Card.Power}"]
+    | Played card -> [%string "You played %{card#Card.Power}."]
   ;;
+
+  let to_others_alert t ~name =
+    match t with
+    | Drew _ -> [%string "%{name} drew a card."]
+    | Exploded -> [%string "%{name} exploded!"]
+    | Played card -> [%string "%{name} played %{card#Card.Power}."]
+  ;;
+
+  module For_testing = struct
+    let all = all
+  end
 end
 
 type t =

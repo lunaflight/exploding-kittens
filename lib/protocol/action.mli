@@ -8,7 +8,19 @@ module Outcome : sig
     | Played of Card.Power.t
   [@@deriving sexp_of]
 
+  (** Returns an alert to a spectator describing that another player with
+      [name] just got an outcome [t].
+      Refer to the [.ml] file for what the alert may look like. *)
+  val to_others_alert : t -> name:string -> string
+
+  (** Returns an alert to the action performer that they just got an outcome
+      [t].
+      Refer to the [.ml] file for what the alert may look like. *)
   val to_self_alert : t -> string
+
+  module For_testing : sig
+    val all : t list
+  end
 end
 
 type t =

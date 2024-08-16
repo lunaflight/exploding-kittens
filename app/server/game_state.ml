@@ -61,11 +61,13 @@ let advance instant ~action =
   let%map.Or_error outcome, hand, deck =
     Action.handle action ~hand:current_player.hand ~deck:instant.deck
   in
+  let instant = Instant.update instant ~deck ~hand in
   let%map () = Instant.broadcast_to_players instant ~outcome in
   match outcome with
   | Action.Outcome.Exploded -> remove_current_player instant
-  | Action.Outcome.Drew _ | Action.Outcome.Played Skip ->
-    Instant.update instant ~deck ~hand |> Instant.rotate_players |> Ongoing
+  | Action.Outcome.Drew _ | Action.Outcome.Skipped ->
+    Instant.rotate_players instant |> Ongoing
+  | Action.Outcome.Saw_the_future _ -> Ongoing instant
 ;;
 
 let init ~connections =

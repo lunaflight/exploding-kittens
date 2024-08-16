@@ -5,7 +5,8 @@ module Outcome : sig
   type t =
     | Drew of Card.t
     | Exploded
-    | Played of Card.Power.t
+    | Saw_the_future of Card.t list
+    | Skipped
   [@@deriving sexp_of]
 
   (** Returns an alert to a spectator describing that another player with
@@ -19,7 +20,7 @@ module Outcome : sig
   val to_self_alert : t -> string
 
   module For_testing : sig
-    val all : t list
+    val all_mocked : drew:Card.t list -> saw_the_future:Card.t list list -> t list
   end
 end
 

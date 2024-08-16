@@ -2,7 +2,9 @@ open! Core
 open! Async
 
 module Power = struct
-  type t = Skip
+  type t =
+    | See_the_future
+    | Skip
   [@@deriving
     bin_io, compare, enumerate, sexp, string ~capitalize:"Title Case" ~case_insensitive]
 end

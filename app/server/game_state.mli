@@ -1,3 +1,6 @@
+(* TODO: This module may need testing. Separating this into the pure part
+   and sticking it into [lib/protocol] could be worth it to make it testable. *)
+
 (** This module handles interactions with a game state. [Deferred.t]s are
     returned as RPCs may be called to the clients to, for example, send messages. *)
 

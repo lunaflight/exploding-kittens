@@ -14,6 +14,7 @@ let init_with_counts ~count_of_card =
 let default_without_exploding_kittens () =
   init_with_counts ~count_of_card:(function
     | Exploding_kitten -> 0
+    | Power See_the_future -> 5
     | Power Skip -> 4
     | Powerless Beard_cat -> 4
     | Powerless Cattermelon -> 4
@@ -43,6 +44,8 @@ let draw t =
   | [] -> Or_error.error_s [%message "Attempting to draw from an empty deck"]
   | hd :: tl -> Or_error.return (hd, tl)
 ;;
+
+let peek t ~n = List.take t n
 
 module For_testing = struct
   let of_card_list t = t

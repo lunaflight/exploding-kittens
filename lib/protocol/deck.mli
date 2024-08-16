@@ -25,6 +25,10 @@ val draw_hand : t -> n:int -> (Hand.t * t) Or_error.t
     If the deck is empty, an error is returned. *)
 val draw : t -> (Card.t * t) Or_error.t
 
+(** Peeks the top [n] cards of the deck.
+    If [n] is more than the deck size, the whole deck is peeked. *)
+val peek : t -> n:int -> Card.t list
+
 module For_testing : sig
   val of_card_list : Card.t list -> t
 end

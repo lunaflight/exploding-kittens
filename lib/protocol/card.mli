@@ -2,7 +2,10 @@ open! Core
 open! Async
 
 module Power : sig
-  type t = Skip [@@deriving bin_io, enumerate, sexp, string]
+  type t =
+    | See_the_future
+    | Skip
+  [@@deriving bin_io, enumerate, sexp, string]
 end
 
 module Powerless : sig

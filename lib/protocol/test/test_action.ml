@@ -12,6 +12,7 @@ let print_parse_table ~format_f =
     function
     | Draw -> "draw"
     | Play Skip -> "skip"
+    | Play See_the_future -> "see the future"
   in
   let parse_table =
     Action.For_testing.all
@@ -26,17 +27,32 @@ let print_parse_table ~format_f =
 
 let%expect_test "able to parse all lowercase" =
   print_parse_table ~format_f:String.lowercase;
-  [%expect {| (parse_table (Ok ((draw Draw) (skip (Play Skip))))) |}]
+  [%expect
+    {|
+    (parse_table
+     (Ok
+      ((draw Draw) ("see the future" (Play See_the_future)) (skip (Play Skip)))))
+    |}]
 ;;
 
 let%expect_test "able to parse all UPPERCASE" =
   print_parse_table ~format_f:String.uppercase;
-  [%expect {| (parse_table (Ok ((DRAW Draw) (SKIP (Play Skip))))) |}]
+  [%expect
+    {|
+    (parse_table
+     (Ok
+      ((DRAW Draw) ("SEE THE FUTURE" (Play See_the_future)) (SKIP (Play Skip)))))
+    |}]
 ;;
 
 let%expect_test "able to parse Titlecase" =
   print_parse_table ~format_f:String.capitalize;
-  [%expect {| (parse_table (Ok ((Draw Draw) (Skip (Play Skip))))) |}]
+  [%expect
+    {|
+    (parse_table
+     (Ok
+      ((Draw Draw) ("See the future" (Play See_the_future)) (Skip (Play Skip)))))
+    |}]
 ;;
 
 let%expect_test "unable to parse unknown action" =
@@ -48,44 +64,54 @@ let%expect_test "unable to parse unknown action" =
     |}]
 ;;
 
+let all_mocked_outcomes =
+  Action.Outcome.For_testing.all_mocked
+    ~drew:[ Powerless Cattermelon ]
+    ~saw_the_future:
+      [ []
+      ; [ Exploding_kitten ]
+      ; [ Powerless Tacocat; Power Skip; Power See_the_future ]
+      ]
+;;
+
 let%expect_test "outcome alerts for self look correct - full feedback is given" =
-  Action.Outcome.For_testing.all
+  all_mocked_outcomes
   |> List.iter ~f:(fun outcome ->
     let alert = Action.Outcome.to_self_alert outcome in
     print_s [%message (outcome : Action.Outcome.t) (alert : string)]);
   [%expect
     {|
-    ((outcome (Drew Exploding_kitten)) (alert "You drew a(n) Exploding Kitten."))
-    ((outcome (Drew (Power Skip))) (alert "You drew a(n) Skip."))
-    ((outcome (Drew (Powerless Beard_cat))) (alert "You drew a(n) Beard Cat."))
     ((outcome (Drew (Powerless Cattermelon)))
      (alert "You drew a(n) Cattermelon."))
-    ((outcome (Drew (Powerless Hairy_potato_cat)))
-     (alert "You drew a(n) Hairy Potato Cat."))
-    ((outcome (Drew (Powerless Rainbow_ralphing_cat)))
-     (alert "You drew a(n) Rainbow-ralphing Cat."))
-    ((outcome (Drew (Powerless Tacocat))) (alert "You drew a(n) Tacocat."))
     ((outcome Exploded) (alert "You exploded!"))
-    ((outcome (Played Skip)) (alert "You played Skip."))
+    ((outcome (Saw_the_future ()))
+     (alert "You did not see any cards as the deck is empty."))
+    ((outcome (Saw_the_future (Exploding_kitten)))
+     (alert "You saw 1 card at the top of the deck: Exploding Kitten"))
+    ((outcome
+      (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
+     (alert
+      "You saw 3 cards at the top of the deck: Tacocat, Skip, See The Future"))
+    ((outcome Skipped) (alert "You skipped your turn."))
     |}]
 ;;
 
 let%expect_test "outcome alerts for others look correct - sensitive info is omitted" =
-  Action.Outcome.For_testing.all
+  all_mocked_outcomes
   |> List.iter ~f:(fun outcome ->
     let alert = Action.Outcome.to_others_alert ~name:"Alice" outcome in
     print_s [%message (outcome : Action.Outcome.t) (alert : string)]);
   [%expect
     {|
-    ((outcome (Drew Exploding_kitten)) (alert "Alice drew a card."))
-    ((outcome (Drew (Power Skip))) (alert "Alice drew a card."))
-    ((outcome (Drew (Powerless Beard_cat))) (alert "Alice drew a card."))
     ((outcome (Drew (Powerless Cattermelon))) (alert "Alice drew a card."))
-    ((outcome (Drew (Powerless Hairy_potato_cat))) (alert "Alice drew a card."))
-    ((outcome (Drew (Powerless Rainbow_ralphing_cat)))
-     (alert "Alice drew a card."))
-    ((outcome (Drew (Powerless Tacocat))) (alert "Alice drew a card."))
     ((outcome Exploded) (alert "Alice exploded!"))
-    ((outcome (Played Skip)) (alert "Alice played Skip."))
+    ((outcome (Saw_the_future ()))
+     (alert "Alice saw the future of 0 cards at the top of the deck."))
+    ((outcome (Saw_the_future (Exploding_kitten)))
+     (alert "Alice saw the future of 1 card at the top of the deck."))
+    ((outcome
+      (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
+     (alert "Alice saw the future of 3 cards at the top of the deck."))
+    ((outcome Skipped) (alert "Alice skipped their turn."))
     |}]
 ;;

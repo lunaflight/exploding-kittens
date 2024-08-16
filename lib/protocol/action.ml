@@ -7,6 +7,13 @@ module Outcome = struct
     | Exploded
     | Played of Card.Power.t
   [@@deriving sexp_of]
+
+  (* TODO: Add a way for other players to get alerted as well. *)
+  let to_self_alert = function
+    | Drew card -> [%string "You drew %{card#Card}"]
+    | Exploded -> [%string "You exploded!"]
+    | Played card -> [%string "You played %{card#Card.Power}"]
+  ;;
 end
 
 type t =

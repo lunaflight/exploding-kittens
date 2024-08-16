@@ -7,6 +7,8 @@ module Outcome : sig
     | Exploded
     | Played of Card.Power.t
   [@@deriving sexp_of]
+
+  val to_self_alert : t -> string
 end
 
 type t =

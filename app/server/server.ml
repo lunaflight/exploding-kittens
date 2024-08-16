@@ -11,7 +11,7 @@ let command =
          ~doc:"HOST_AND_PORT (format=host:port) More than one must be provided."
      in
      fun () ->
-       match List.permute player with
+       match player with
        | [] | [ _ ] ->
          raise_s
            [%message
@@ -22,5 +22,5 @@ let command =
              Rpc.Connection.client (Tcp.Where_to_connect.of_host_and_port player)
              >>| Result.ok_exn)
          in
-         Logic.start ~connections)
+         Interaction.start ~connections |> Deferred.Or_error.ok_exn)
 ;;

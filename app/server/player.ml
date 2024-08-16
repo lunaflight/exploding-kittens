@@ -1,5 +1,6 @@
 open! Core
 open! Async
+open Protocol_lib
 
 type t =
   { connection : Rpc.Connection.t

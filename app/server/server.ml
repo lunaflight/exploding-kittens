@@ -22,5 +22,10 @@ let command =
              Rpc.Connection.client (Tcp.Where_to_connect.of_host_and_port player)
              >>| Result.ok_exn)
          in
-         Interaction.start ~connections |> Deferred.Or_error.ok_exn)
+         Game_state.start
+           ~connections
+           ~get_action:Interaction.get_action
+           ~on_outcome:Interaction.broadcast_to_players
+           ~on_win:(fun ~player ~message -> Player.send_message player message)
+         |> Deferred.Or_error.ok_exn)
 ;;

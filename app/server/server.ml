@@ -24,7 +24,9 @@ let command =
          in
          Game_state.start
            ~connections
-           ~get_action:Interaction.get_action
+           ~get_draw_or_play:Interaction.get_draw_or_play
+           ~get_exploding_kitten_insert_position:
+             Interaction.get_exploding_kitten_insert_position
            ~on_outcome:Interaction.broadcast_to_players
            ~on_win:(fun ~player ~message -> Player.send_message player message)
          |> Deferred.Or_error.ok_exn)

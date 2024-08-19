@@ -10,7 +10,18 @@ val broadcast_to_players
   -> outcome:Action.Outcome.t
   -> unit Deferred.t
 
-(** Sends an RPC to the [current_player] to ask for an [Action.t]. No
-    validation for the [Action.t] is done. It will prompt the player with
-    [prompt]. *)
-val get_action : current_player:Player.t -> prompt:string -> Action.t Deferred.t
+(** Sends an RPC to the [player] to ask for an [Action.t].
+    No validation for the validity of [Action.t] is done, hence reprompting
+    is required and described by [reprompt_context]. *)
+val get_draw_or_play
+  :  player:Player.t
+  -> reprompt_context:string option
+  -> Action.Draw_or_play.t Deferred.t
+
+(** Sends an RPC to the [player] to ask for an insert position.
+    This [int] will be used by [Deck.insert] - refer to its [.mli] for more
+    details. *)
+val get_exploding_kitten_insert_position
+  :  player:Player.t
+  -> deck_size:int
+  -> int Deferred.t

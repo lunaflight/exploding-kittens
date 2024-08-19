@@ -3,8 +3,10 @@ open! Async
 
 module Outcome : sig
   type t =
-    | Drew of Card.t
+    | Defused
+    | Drew_safely of Card.t
     | Exploded
+    | Inserted_exploding_kitten of int
     | Saw_the_future of Card.t list
     | Skipped
   [@@deriving sexp_of]
@@ -20,22 +22,44 @@ module Outcome : sig
   val to_self_alert : t -> string
 
   module For_testing : sig
-    val all_mocked : drew:Card.t list -> saw_the_future:Card.t list list -> t list
+    val all_mocked
+      :  drew_safely:Card.t list
+      -> inserted_exploding_kitten:int list
+      -> saw_the_future:Card.t list list
+      -> t list
   end
 end
 
-type t =
-  | Draw
-  | Play of Card.Power.t
-[@@deriving bin_io, sexp]
+module Next_step : sig
+  type t =
+    | Draw_or_play
+    | Eliminate_player
+    | Insert_exploding_kitten
+    | Pass_turn
+  [@@deriving sexp_of]
 
-(** Returns the outcome of performing an action. The updated hand and deck will
-    also be returned. *)
-val handle : t -> hand:Hand.t -> deck:Deck.t -> (Outcome.t * Hand.t * Deck.t) Or_error.t
+  val of_outcome : Outcome.t -> t
+end
 
-(* TODO: Accomodate shortened forms or unique prefixes of an action. *)
-val of_string : string -> t Or_error.t
+module Draw_or_play : sig
+  type t =
+    | Draw
+    | Play of Card.Power.t
+  [@@deriving bin_io, sexp]
 
-module For_testing : sig
-  val all : t list
+  (** Returns the outcome, updated hand and updated deck given the parameters. *)
+  val handle : t -> hand:Hand.t -> deck:Deck.t -> (Outcome.t * Hand.t * Deck.t) Or_error.t
+
+  (* TODO: Accomodate shortened forms or unique prefixes of an action. *)
+  val of_string : string -> t Or_error.t
+
+  module For_testing : sig
+    val all : t list
+  end
+end
+
+module Insert_exploding_kitten : sig
+  (** Returns the outcome and updated deck given the [position] of insertion.
+      Refer to [Deck.insert] for more details. *)
+  val handle : position:int -> deck:Deck.t -> Outcome.t * Deck.t
 end

@@ -7,6 +7,7 @@ let%expect_test "Card string representation looks correct" =
     print_s [%message (card : Card.t) (string_representation : string)]);
   [%expect
     {|
+    ((card Defuse) (string_representation Defuse))
     ((card Exploding_kitten) (string_representation "Exploding Kitten"))
     ((card (Power See_the_future)) (string_representation "See The Future"))
     ((card (Power Skip)) (string_representation Skip))

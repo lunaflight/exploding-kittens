@@ -11,7 +11,17 @@ let broadcast_to_players ~current_player ~other_players ~outcome =
     |> Player.send_message player)
 ;;
 
-let get_action ~current_player ~prompt =
-  let%bind () = Player.send_message current_player prompt in
-  Player.get_action current_player
+let send_player_if_some player ~message =
+  match message with
+  | None -> Deferred.return ()
+  | Some message -> Player.send_message player message
+;;
+
+let get_draw_or_play ~player ~reprompt_context =
+  let%bind () = send_player_if_some player ~message:reprompt_context in
+  Player.get_draw_or_play player
+;;
+
+let get_exploding_kitten_insert_position ~player ~deck_size =
+  Player.get_exploding_kitten_insert_position player ~deck_size
 ;;

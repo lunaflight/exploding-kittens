@@ -29,6 +29,19 @@ val draw : t -> (Card.t * t) Or_error.t
     If [n] is more than the deck size, the whole deck is peeked. *)
 val peek : t -> n:int -> Card.t list
 
+(** Inserts [card] at the [position].
+    If [position] is negative, the card is inserted from the back.
+    For example:
+    If [position] = 0, the card is placed on top.
+    If [position] = -1, the card is placed at the bottom.
+
+    It is expected that: -m <= [position] < m.
+    If [position] is sufficiently large or small, it is set to [-m] or [m - 1]
+    appropriately. *)
+val insert : t -> card:Card.t -> position:int -> t
+
+val size : t -> int
+
 module For_testing : sig
   val of_card_list : Card.t list -> t
 end

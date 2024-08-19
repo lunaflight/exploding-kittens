@@ -21,6 +21,7 @@ end
 
 module T = struct
   type t =
+    | Defuse
     | Exploding_kitten
     (* Ensure no string representations are shared during nesting. *)
     | Power of Power.t [@nested ""]

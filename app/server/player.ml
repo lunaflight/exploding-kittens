@@ -8,8 +8,16 @@ type t =
   ; name : string
   }
 
-let get_action { connection; hand; name = (_ : string) } =
-  Rpc.Rpc.dispatch Rpcs.Get_action.rpc connection hand |> Deferred.Or_error.ok_exn
+let get_draw_or_play { connection; hand; name = (_ : string) } =
+  Rpc.Rpc.dispatch Rpcs.Get_draw_or_play.rpc connection hand |> Deferred.Or_error.ok_exn
+;;
+
+let get_exploding_kitten_insert_position
+  { connection; hand = (_ : Hand.t); name = (_ : string) }
+  ~deck_size
+  =
+  Rpc.Rpc.dispatch Rpcs.Get_exploding_kitten_insert_position.rpc connection deck_size
+  |> Deferred.Or_error.ok_exn
 ;;
 
 let send_message { connection; hand = (_ : Hand.t); name = (_ : string) } message =

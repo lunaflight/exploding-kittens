@@ -29,7 +29,12 @@ type t =
     The [Deferred.t] becomes determined when there is a winner. *)
 val start
   :  connections:Rpc.Connection.t list
-  -> get_action:(current_player:Player.t -> prompt:string -> Action.t Deferred.t)
+  -> get_draw_or_play:
+       (player:Player.t
+        -> reprompt_context:string option
+        -> Action.Draw_or_play.t Deferred.t)
+  -> get_exploding_kitten_insert_position:
+       (player:Player.t -> deck_size:int -> int Deferred.t)
   -> on_outcome:
        (current_player:Player.t
         -> other_players:Player.t list

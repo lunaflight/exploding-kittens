@@ -18,6 +18,7 @@ module Powerless : sig
 end
 
 type t =
+  | Defuse
   | Exploding_kitten
   | Power of Power.t
   | Powerless of Powerless.t

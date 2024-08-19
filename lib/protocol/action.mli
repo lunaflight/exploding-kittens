@@ -52,10 +52,8 @@ module Draw_or_play : sig
 
   (* TODO: Accomodate shortened forms or unique prefixes of an action. *)
   val of_string : string -> t Or_error.t
-
-  module For_testing : sig
-    val all : t list
-  end
+  val to_string : t -> string
+  val all : t list
 end
 
 module Insert_exploding_kitten : sig

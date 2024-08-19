@@ -17,10 +17,9 @@ let get_input ~prompt =
       `Repeat prompt)
 ;;
 
-(* TODO: Tell the user what possibilities are inputtable. *)
-let get ~prelude ~prompt ~of_string_or_error =
+let get ~prelude ~prompt ~input_hint ~of_string_or_error =
   Writer.write_line stdout prelude;
-  Deferred.repeat_until_finished prompt (fun prompt ->
+  Deferred.repeat_until_finished [%string "%{prompt} [%{input_hint}]: "] (fun prompt ->
     let%map input = get_input ~prompt in
     match of_string_or_error input with
     | Error _ ->
@@ -30,17 +29,27 @@ let get ~prelude ~prompt ~of_string_or_error =
 ;;
 
 let get_draw_or_play ~hand =
+  (* TODO: Analyze which actions are playable and output them. *)
+  let possible_strings =
+    Action.Draw_or_play.all
+    |> List.map ~f:Action.Draw_or_play.to_string
+    |> String.concat ~sep:"|"
+  in
   get
     ~prelude:[%string "Your hand: %{hand#Hand}"]
-    ~prompt:"Provide an action: "
+    ~prompt:[%string "Provide an action"]
+    ~input_hint:possible_strings
     ~of_string_or_error:Action.Draw_or_play.of_string
 ;;
 
 (* TODO: Provide a better interface than just a mysterous int as a postion. *)
 let get_exploding_kitten_insert_position ~deck_size =
+  let lowest_pos = -deck_size - 1 in
+  let highest_pos = deck_size in
   get
     ~prelude:[%string "Deck size: %{deck_size#Int}"]
-    ~prompt:"Provide an insert position: "
+    ~prompt:[%string "Provide an insert position "]
+    ~input_hint:[%string "%{lowest_pos#Int}..%{highest_pos#Int}"]
     ~of_string_or_error:(fun string ->
       Int.of_string_opt string
       |> Or_error.of_option

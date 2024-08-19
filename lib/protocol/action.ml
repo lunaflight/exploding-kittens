@@ -90,7 +90,7 @@ module Draw_or_play = struct
   type t =
     | Draw
     | Play of Card.Power.t [@nested ""]
-  [@@deriving bin_io, enumerate, of_string ~case_insensitive, sexp]
+  [@@deriving bin_io, enumerate, string ~capitalize:"Title Case" ~case_insensitive, sexp]
 
   let of_string t = Or_error.try_with (fun () -> of_string t)
 
@@ -110,10 +110,6 @@ module Draw_or_play = struct
        | Skip -> Outcome.Skipped, hand, deck
        | See_the_future -> Outcome.Saw_the_future (Deck.peek deck ~n:3), hand, deck)
   ;;
-
-  module For_testing = struct
-    let all = all
-  end
 end
 
 module Insert_exploding_kitten = struct

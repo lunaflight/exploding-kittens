@@ -15,7 +15,7 @@ let print_parse_table ~format_f =
     | Play See_the_future -> "see the future"
   in
   let parse_table =
-    Action.Draw_or_play.For_testing.all
+    Action.Draw_or_play.all
     |> List.map ~f:(fun action ->
       let expected_string = action |> expected_string_of_action |> format_f in
       let%map.Or_error action = expected_string |> Action.Draw_or_play.of_string in

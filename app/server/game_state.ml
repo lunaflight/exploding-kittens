@@ -150,10 +150,11 @@ let start
          size. *)
       ~init:(Deck.default_without_exploding_kittens () |> Deck.shuffle)
       ~f:(fun deck connection ->
-        (* TODO: Properly bind on this [Or_error.t]. *)
-        let hand, deck = Deck.draw_hand deck ~n:8 |> Or_error.ok_exn in
-        deck, (connection, hand))
+        match Deck.draw_hand deck ~n:8 with
+        | Ok (hand, deck) -> deck, (connection, hand) |> Or_error.return
+        | Error _ as err -> deck, Or_error.tag err ~tag:"Deck is not sufficiently large")
   in
+  let%bind connection_and_hands = Or_error.all connection_and_hands |> Deferred.return in
   let%bind players =
     Monitor.try_with_or_error (fun () ->
       Deferred.List.map

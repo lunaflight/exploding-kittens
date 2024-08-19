@@ -21,6 +21,7 @@ type t =
 (** Starts the gameplay loop for the players described by their [connections].
     Sane default presets such as the deck composition and hand size are used.
     An error will be returned if there is less than 2 [connections].
+    An error will also be returned if the deck is not of sufficient size.
 
     Additional callback function parameters describe how the server should
     handle the event described by the name. Functions from [Interaction] should

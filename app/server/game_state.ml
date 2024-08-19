@@ -143,15 +143,20 @@ let start
   =
   let open Deferred.Or_error.Let_syntax in
   (* TODO: Give a name to this part, perhaps [players_of_connections ~deck]. *)
+  let%bind deck =
+    Deck.default_without_exploding_kittens ~player_cnt:(List.length connections)
+    |> Deferred.return
+  in
   let deck, connection_and_hands =
     List.fold_map
       connections
       (* TODO: Provide a way to customise the starting deck and starting hand
          size. *)
-      ~init:(Deck.default_without_exploding_kittens () |> Deck.shuffle)
+      ~init:deck
       ~f:(fun deck connection ->
-        match Deck.draw_hand deck ~n:8 with
-        | Ok (hand, deck) -> deck, (connection, hand) |> Or_error.return
+        match Deck.draw_hand deck ~n:7 with
+        | Ok (hand, deck) ->
+          deck, (connection, Hand.add_card ~card:Defuse hand) |> Or_error.return
         | Error _ as err -> deck, Or_error.tag err ~tag:"Deck is not sufficiently large")
   in
   let%bind connection_and_hands = Or_error.all connection_and_hands |> Deferred.return in

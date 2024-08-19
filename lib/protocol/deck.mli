@@ -6,11 +6,15 @@ type t [@@deriving bin_io, sexp]
 (** Shuffles the deck non-deterministically. *)
 val shuffle : t -> t
 
-(** Initialises a shuffled deck with defaults based on the rules of the game.
+(** Initialises a non-deterministically shuffled deck with defaults based on
+    the rules of the game.
     There will not be any exploding kittens in this deck. They should be added
-    after dealing players their initial hands.
+    after dealing players their initial hands with [add_exploding_kittens].
+    This deck is suitable for 2 to 5 players. An error is returned if
+    [player_cnt] is out of range.
+
     Refer to the [.ml] file for more details on the card counts. *)
-val default_without_exploding_kittens : unit -> t
+val default_without_exploding_kittens : player_cnt:int -> t Or_error.t
 
 (** Adds [n] exploding kittens to a deck and shuffles it. *)
 val add_exploding_kittens : t -> n:int -> t

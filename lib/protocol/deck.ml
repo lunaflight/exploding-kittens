@@ -11,26 +11,30 @@ let init_with_counts ~count_of_card =
   |> List.concat
 ;;
 
-let default_without_exploding_kittens () =
-  init_with_counts ~count_of_card:(function
-    (* TODO: Make this vary with number of players, like the original game. *)
-    | Defuse -> 2
-    | Exploding_kitten -> 0
-    | Power See_the_future -> 5
-    | Power Skip -> 4
-    | Powerless Beard_cat -> 4
-    | Powerless Cattermelon -> 4
-    | Powerless Hairy_potato_cat -> 4
-    | Powerless Rainbow_ralphing_cat -> 4
-    | Powerless Tacocat -> 4)
-  |> shuffle
+let default_without_exploding_kittens ~player_cnt =
+  if player_cnt < 2 || player_cnt >= 5
+  then
+    Or_error.error_s
+      [%message "This deck is suited for 2 to 5 players." (player_cnt : int)]
+  else
+    init_with_counts ~count_of_card:(function
+      | Defuse -> if player_cnt <= 3 then 2 else 6 - player_cnt
+      | Exploding_kitten -> 0
+      | Power See_the_future -> 5
+      | Power Skip -> 4
+      | Powerless Beard_cat -> 4
+      | Powerless Cattermelon -> 4
+      | Powerless Hairy_potato_cat -> 4
+      | Powerless Rainbow_ralphing_cat -> 4
+      | Powerless Tacocat -> 4)
+    |> shuffle
+    |> Or_error.return
 ;;
 
 let add_exploding_kittens t ~n =
   t @ List.init n ~f:(fun _i -> Card.Exploding_kitten) |> shuffle
 ;;
 
-(* TODO: On the initial deal, each player should be given one additional defuse. *)
 let draw_hand t ~n =
   if n <= 0 || n > List.length t
   then

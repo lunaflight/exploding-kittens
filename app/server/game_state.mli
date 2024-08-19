@@ -19,9 +19,15 @@ type t =
   | Ongoing of Instant.t
 
 (** Starts the gameplay loop for the players described by their [connections].
-    Sane default presets such as the deck composition and hand size are used.
-    An error will be returned if there is less than 2 [connections].
-    An error will also be returned if the deck is not of sufficient size.
+    Default presets are used in accordance to the original game. For example,
+    each player starts with 1 defuse and draws 7 cards initially. The deck
+    composition is also determined by [Deck.default_without_exploding_kittens].
+
+    The deck expects a certain player count. An error will be returned
+    if there are too few or too many connections. Refer to
+    [Deck.default_without_exploding_kittens].
+    An error will also be returned if the deck is not of sufficient size for
+    the number of players.
 
     Additional callback function parameters describe how the server should
     handle the event described by the name. Functions from [Interaction] should

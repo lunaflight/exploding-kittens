@@ -9,6 +9,7 @@ module Outcome = struct
     | Inserted_exploding_kitten of int
     | Saw_the_future of Card.t list
     | Skipped
+    | Shuffled
   [@@deriving variants, sexp_of]
 
   let to_self_alert = function
@@ -30,6 +31,7 @@ module Outcome = struct
        | 0 -> "You did not see any cards as the deck is empty."
        | _ -> [%string "You saw %{n_cards} at the top of the deck: %{cards_string}"])
     | Skipped -> [%string "You skipped your turn."]
+    | Shuffled -> [%string "You shuffled the deck."]
   ;;
 
   let to_others_alert t ~name =
@@ -47,6 +49,7 @@ module Outcome = struct
       in
       [%string "%{name} saw the future of %{n_cards} at the top of the deck."]
     | Skipped -> [%string "%{name} skipped their turn."]
+    | Shuffled -> [%string "%{name} shuffled the deck."]
   ;;
 
   module For_testing = struct
@@ -62,6 +65,7 @@ module Outcome = struct
         ~saw_the_future:(fun acc v ->
           List.map saw_the_future ~f:v.constructor |> List.append acc)
         ~skipped:(fun acc v -> acc @ [ v.constructor ])
+        ~shuffled:(fun acc v -> acc @ [ v.constructor ])
     ;;
   end
 end
@@ -83,6 +87,7 @@ module Next_step = struct
     | Inserted_exploding_kitten _ -> Pass_turn
     | Saw_the_future _ -> Draw_or_play
     | Skipped -> Pass_turn
+    | Shuffled -> Draw_or_play
   ;;
 end
 
@@ -94,7 +99,7 @@ module Draw_or_play = struct
 
   let of_string t = Or_error.try_with (fun () -> of_string t)
 
-  let handle t ~hand ~deck =
+  let handle t ~hand ~deck ~deterministically =
     match t with
     | Draw ->
       let%map.Or_error card, deck = Deck.draw deck in
@@ -107,8 +112,9 @@ module Draw_or_play = struct
     | Play power ->
       let%map.Or_error hand = Hand.remove_card hand ~card:(Power power) in
       (match power with
+       | See_the_future -> Outcome.Saw_the_future (Deck.peek deck ~n:3), hand, deck
        | Skip -> Outcome.Skipped, hand, deck
-       | See_the_future -> Outcome.Saw_the_future (Deck.peek deck ~n:3), hand, deck)
+       | Shuffle -> Outcome.Shuffled, hand, Deck.shuffle deck ~deterministically)
   ;;
 end
 

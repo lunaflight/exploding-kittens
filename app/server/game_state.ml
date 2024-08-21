@@ -97,6 +97,7 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
             action
             ~hand:instant.current_player.hand
             ~deck:instant.deck
+            ~deterministically:false
         with
         | Error _ -> `Repeat (Some "This action is invalid.")
         | Ok result -> `Finished result)
@@ -144,7 +145,9 @@ let start
   let open Deferred.Or_error.Let_syntax in
   (* TODO-soon: Give a name to this part, perhaps [players_of_connections ~deck]. *)
   let%bind deck =
-    Deck.default_without_exploding_kittens ~player_cnt:(List.length connections)
+    Deck.default_without_exploding_kittens
+      ~player_cnt:(List.length connections)
+      ~deterministically:false
     |> Deferred.return
   in
   let deck, connection_and_hands =
@@ -178,7 +181,11 @@ let start
   | current_player :: hd :: tl ->
     (* TODO-soon: Would be nice to give this initial state a name. *)
     Monitor.try_with_or_error (fun () ->
-      { deck = Deck.add_exploding_kittens deck ~n:(List.length players - 1)
+      { deck =
+          Deck.add_exploding_kittens
+            deck
+            ~n:(List.length players - 1)
+            ~deterministically:false
       ; current_player
       ; other_players = Nonempty_list.create hd tl
       ; next_step = Draw_or_play

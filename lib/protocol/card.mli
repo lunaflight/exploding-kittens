@@ -5,6 +5,7 @@ module Power : sig
   type t =
     | See_the_future
     | Skip
+    | Shuffle
   [@@deriving bin_io, enumerate, sexp, string]
 end
 

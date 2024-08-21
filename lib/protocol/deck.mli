@@ -3,21 +3,29 @@ open! Async
 
 type t [@@deriving bin_io, sexp]
 
-(** Shuffles the deck non-deterministically. *)
-val shuffle : t -> t
+val shuffle : t -> deterministically:bool -> t
 
-(** Initialises a non-deterministically shuffled deck with defaults based on
-    the rules of the game.
+(** Initialises a shuffled deck based on [deterministically], with defaults
+    based on the rules of the game.
     There will not be any exploding kittens in this deck. They should be added
     after dealing players their initial hands with [add_exploding_kittens].
     This deck is suitable for 2 to 5 players. An error is returned if
     [player_cnt] is out of range.
 
     Refer to the [.ml] file for more details on the card counts. *)
-val default_without_exploding_kittens : player_cnt:int -> t Or_error.t
+val default_without_exploding_kittens
+  :  player_cnt:int
+  -> deterministically:bool
+  -> t Or_error.t
 
-(** Adds [n] exploding kittens to a deck and shuffles it. *)
-val add_exploding_kittens : t -> n:int -> t
+(* TODO-soon: This should take in a [player_cnt] parameter instead of [n]. *)
+
+(** Adds [n] exploding kittens to a deck and shuffles it according to
+    [deterministically]. *)
+val add_exploding_kittens : t -> n:int -> deterministically:bool -> t
+
+(* TODO-soon: Lint a [Without_exploding_kittens] module and rename [draw_hand]
+   to [deal] under only that module, to make it safer. *)
 
 (** Draws [n] number of cards from the deck. It returns a tuple of the drew
     cards and the resulting deck.

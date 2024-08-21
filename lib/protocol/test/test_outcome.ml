@@ -46,6 +46,7 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
      (alert
       "You saw 3 cards at the top of the deck: Tacocat, Skip, See The Future"))
     ((outcome Skipped) (alert "You skipped your turn."))
+    ((outcome Shuffled) (alert "You shuffled the deck."))
     |}]
 ;;
 
@@ -77,5 +78,6 @@ let%expect_test "outcome alerts for others look correct - sensitive info is omit
       (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
      (alert "Alice saw the future of 3 cards at the top of the deck."))
     ((outcome Skipped) (alert "Alice skipped their turn."))
+    ((outcome Shuffled) (alert "Alice shuffled the deck."))
     |}]
 ;;

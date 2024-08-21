@@ -2,7 +2,7 @@ open! Core
 open Protocol_lib
 
 let handle_and_print action ~hand ~deck =
-  match Action.Draw_or_play.handle action ~hand ~deck with
+  match Action.Draw_or_play.handle action ~hand ~deck ~deterministically:true with
   | Error error -> print_s [%message (error : Error.t)]
   | Ok (outcome, hand, deck) ->
     print_s [%message (outcome : Action.Outcome.t) (hand : Hand.t) (deck : Deck.t)]
@@ -102,4 +102,31 @@ let%expect_test "play Skip -> consumed and no card drawn" =
     ~hand:(Hand.of_cards [ Power Skip ])
     ~deck:(Deck.For_testing.of_card_list []);
   [%expect {| ((outcome Skipped) (hand ()) (deck ())) |}]
+;;
+
+let%expect_test "play Shuffle -> consumed and deck is shuffled" =
+  handle_and_print
+    (Play Shuffle)
+    ~hand:(Hand.of_cards [ Power Shuffle ])
+    ~deck:
+      (Deck.For_testing.of_card_list
+         [ Powerless Beard_cat
+         ; Powerless Cattermelon
+         ; Powerless Hairy_potato_cat
+         ; Powerless Rainbow_ralphing_cat
+         ; Powerless Tacocat
+         ; Defuse
+         ; Power Skip
+         ; Power Shuffle
+         ; Power See_the_future
+         ; Exploding_kitten
+         ]);
+  [%expect
+    {|
+    ((outcome Shuffled) (hand ())
+     (deck
+      (Defuse (Powerless Cattermelon) (Power Skip) (Power See_the_future)
+       (Powerless Tacocat) Exploding_kitten (Powerless Rainbow_ralphing_cat)
+       (Powerless Hairy_potato_cat) (Power Shuffle) (Powerless Beard_cat))))
+    |}]
 ;;

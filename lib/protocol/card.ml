@@ -5,6 +5,7 @@ module Power = struct
   type t =
     | See_the_future
     | Skip
+    | Shuffle
   [@@deriving
     bin_io, compare, enumerate, sexp, string ~capitalize:"Title Case" ~case_insensitive]
 end

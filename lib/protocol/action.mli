@@ -9,6 +9,7 @@ module Outcome : sig
     | Inserted_exploding_kitten of int
     | Saw_the_future of Card.t list
     | Skipped
+    | Shuffled
   [@@deriving sexp_of]
 
   (** Returns an alert to a spectator describing that another player with
@@ -47,8 +48,14 @@ module Draw_or_play : sig
     | Play of Card.Power.t
   [@@deriving bin_io, sexp]
 
-  (** Returns the outcome, updated hand and updated deck given the parameters. *)
-  val handle : t -> hand:Hand.t -> deck:Deck.t -> (Outcome.t * Hand.t * Deck.t) Or_error.t
+  (** Returns the outcome, updated hand and updated deck given the parameters.
+      [deterministically] is used to handle deck shuffling if required. *)
+  val handle
+    :  t
+    -> hand:Hand.t
+    -> deck:Deck.t
+    -> deterministically:bool
+    -> (Outcome.t * Hand.t * Deck.t) Or_error.t
 
   (* TODO-someday: Accomodate shortened forms or unique prefixes of an action. *)
   val of_string : string -> t Or_error.t

@@ -11,8 +11,9 @@ let print_parse_table ~format_f =
     let open Action.Draw_or_play in
     function
     | Draw -> "draw"
-    | Play Skip -> "skip"
     | Play See_the_future -> "see the future"
+    | Play Skip -> "skip"
+    | Play Shuffle -> "shuffle"
   in
   let parse_table =
     Action.Draw_or_play.all
@@ -31,7 +32,8 @@ let%expect_test "able to parse all lowercase" =
     {|
     (parse_table
      (Ok
-      ((draw Draw) ("see the future" (Play See_the_future)) (skip (Play Skip)))))
+      ((draw Draw) ("see the future" (Play See_the_future)) (skip (Play Skip))
+       (shuffle (Play Shuffle)))))
     |}]
 ;;
 
@@ -41,7 +43,8 @@ let%expect_test "able to parse all UPPERCASE" =
     {|
     (parse_table
      (Ok
-      ((DRAW Draw) ("SEE THE FUTURE" (Play See_the_future)) (SKIP (Play Skip)))))
+      ((DRAW Draw) ("SEE THE FUTURE" (Play See_the_future)) (SKIP (Play Skip))
+       (SHUFFLE (Play Shuffle)))))
     |}]
 ;;
 
@@ -51,7 +54,8 @@ let%expect_test "able to parse Titlecase" =
     {|
     (parse_table
      (Ok
-      ((Draw Draw) ("See the future" (Play See_the_future)) (Skip (Play Skip)))))
+      ((Draw Draw) ("See the future" (Play See_the_future)) (Skip (Play Skip))
+       (Shuffle (Play Shuffle)))))
     |}]
 ;;
 

@@ -11,6 +11,7 @@ let%expect_test "Card string representation looks correct" =
     ((card Exploding_kitten) (string_representation "Exploding Kitten"))
     ((card (Power See_the_future)) (string_representation "See The Future"))
     ((card (Power Skip)) (string_representation Skip))
+    ((card (Power Shuffle)) (string_representation Shuffle))
     ((card (Powerless Beard_cat)) (string_representation "Beard Cat"))
     ((card (Powerless Cattermelon)) (string_representation Cattermelon))
     ((card (Powerless Hairy_potato_cat))

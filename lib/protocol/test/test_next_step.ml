@@ -25,5 +25,6 @@ let%expect_test "next step of outcomes" =
     ((outcome (Inserted_exploding_kitten 0)) (next_step Pass_turn))
     ((outcome (Saw_the_future ())) (next_step Draw_or_play))
     ((outcome Skipped) (next_step Pass_turn))
+    ((outcome Shuffled) (next_step Draw_or_play))
     |}]
 ;;

@@ -3,7 +3,11 @@ open! Async
 
 type t = Card.t list [@@deriving bin_io, sexp]
 
-let shuffle t = List.permute t
+let shuffle t ~deterministically =
+  List.permute
+    ?random_state:(Random.State.make [||] |> Option.some_if deterministically)
+    t
+;;
 
 let init_with_counts ~count_of_card =
   Card.all
@@ -11,7 +15,7 @@ let init_with_counts ~count_of_card =
   |> List.concat
 ;;
 
-let default_without_exploding_kittens ~player_cnt =
+let default_without_exploding_kittens ~player_cnt ~deterministically =
   if player_cnt < 2 || player_cnt >= 5
   then
     Or_error.error_s
@@ -22,17 +26,18 @@ let default_without_exploding_kittens ~player_cnt =
       | Exploding_kitten -> 0
       | Power See_the_future -> 5
       | Power Skip -> 4
+      | Power Shuffle -> 4
       | Powerless Beard_cat -> 4
       | Powerless Cattermelon -> 4
       | Powerless Hairy_potato_cat -> 4
       | Powerless Rainbow_ralphing_cat -> 4
       | Powerless Tacocat -> 4)
-    |> shuffle
+    |> shuffle ~deterministically
     |> Or_error.return
 ;;
 
-let add_exploding_kittens t ~n =
-  t @ List.init n ~f:(fun _i -> Card.Exploding_kitten) |> shuffle
+let add_exploding_kittens t ~n ~deterministically =
+  t @ List.init n ~f:(fun _i -> Card.Exploding_kitten) |> shuffle ~deterministically
 ;;
 
 let draw_hand t ~n =

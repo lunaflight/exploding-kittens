@@ -13,7 +13,7 @@ module Outcome = struct
 
   let to_self_alert = function
     | Defused -> [%string "You defused an exploding kitten!"]
-    (* TODO: Perhaps we can provide a lookup table to decide between "a" or
+    (* TODO-someday: Perhaps we can provide a lookup table to decide between "a" or
        "an" or download some library that handles this for us. *)
     | Drew_safely card -> [%string "You drew a(n) %{card#Card}."]
     | Inserted_exploding_kitten position ->

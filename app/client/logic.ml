@@ -29,7 +29,7 @@ let get ~prelude ~prompt ~input_hint ~of_string_or_error =
 ;;
 
 let get_draw_or_play ~hand =
-  (* TODO: Analyze which actions are playable and output them. *)
+  (* TODO-soon: Analyze which actions are playable and output them. *)
   let possible_strings =
     Action.Draw_or_play.all
     |> List.map ~f:Action.Draw_or_play.to_string
@@ -42,7 +42,7 @@ let get_draw_or_play ~hand =
     ~of_string_or_error:Action.Draw_or_play.of_string
 ;;
 
-(* TODO: Provide a better interface than just a mysterous int as a postion. *)
+(* TODO-soon: Provide a better interface than just a mysterous int as a postion. *)
 let get_exploding_kitten_insert_position ~deck_size =
   let lowest_pos = -deck_size - 1 in
   let highest_pos = deck_size in

@@ -1,4 +1,4 @@
-(* TODO: Consider testing this module. The main obstacle is creating
+(* TODO-soon: Consider testing this module. The main obstacle is creating
    [Player.t] without the [Rpc.Connection.t] *)
 
 (** This module handles interactions with a game state. [Deferred.t]s are

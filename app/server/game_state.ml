@@ -39,7 +39,7 @@ type t =
   | Winner of Player.t
   | Ongoing of Instant.t
 
-(* TODO: It could be nice if the player wasn't deleted - maybe dead players
+(* TODO-someday: It could be nice if the player wasn't deleted - maybe dead players
    should be able to see all actions that happen as they spectate. *)
 let eliminate_current_player
   ({ deck; current_player = (_ : Player.t); other_players; next_step = (_ : Next_step.t) } :
@@ -56,11 +56,11 @@ let eliminate_current_player
       }
 ;;
 
-(* TODO: If the number of callbacks becomes too high (> 5?), consider linting a
+(* TODO-someday: If the number of callbacks becomes too high (> 5?), consider linting a
    [Callbacks.t] type. *)
 let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_outcome =
   match Instant.next_step instant with
-  (* TODO: Eliminating players can be more robust - they need not be at the
+  (* TODO-someday: Eliminating players can be more robust - they need not be at the
      front of the queue. *)
   | Eliminate_player -> eliminate_current_player instant |> return
   | Pass_turn -> Instant.pass_turn instant |> Ongoing |> return
@@ -73,7 +73,7 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
     let outcome, deck =
       Action.Insert_exploding_kitten.handle ~position ~deck:instant.deck
     in
-    (* TODO: A hint needs to be added so [on_outcome] is called when there is an
+    (* TODO-soon: A hint needs to be added so [on_outcome] is called when there is an
        [outcome]. A good idea is to expose some [Instant] updating function that
        calls that as a side effect. The following is too vulnerable to mistakes.
        There is also some reduplication here. *)
@@ -85,7 +85,7 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
     in
     Ongoing { instant with deck; next_step = Action.Next_step.of_outcome outcome }
   | Draw_or_play ->
-    (* TODO: It might be a good idea to refactor this interaction part
+    (* TODO-soon: It might be a good idea to refactor this interaction part
        elsewhere. It detracts from the main purpose of this function. *)
     let%bind outcome, hand, deck =
       Deferred.repeat_until_finished None (fun reprompt_context ->
@@ -142,7 +142,7 @@ let start
   ~on_win
   =
   let open Deferred.Or_error.Let_syntax in
-  (* TODO: Give a name to this part, perhaps [players_of_connections ~deck]. *)
+  (* TODO-soon: Give a name to this part, perhaps [players_of_connections ~deck]. *)
   let%bind deck =
     Deck.default_without_exploding_kittens ~player_cnt:(List.length connections)
     |> Deferred.return
@@ -150,7 +150,7 @@ let start
   let deck, connection_and_hands =
     List.fold_map
       connections
-      (* TODO: Provide a way to customise the starting deck and starting hand
+      (* TODO-someday: Provide a way to customise the starting deck and starting hand
          size. *)
       ~init:deck
       ~f:(fun deck connection ->
@@ -176,7 +176,7 @@ let start
     Deferred.Or_error.error_s
       [%message "More than 1 player is required to start the game"]
   | current_player :: hd :: tl ->
-    (* TODO: Would be nice to give this initial state a name. *)
+    (* TODO-soon: Would be nice to give this initial state a name. *)
     Monitor.try_with_or_error (fun () ->
       { deck = Deck.add_exploding_kittens deck ~n:(List.length players - 1)
       ; current_player

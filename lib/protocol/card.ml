@@ -29,7 +29,7 @@ module T = struct
   [@@deriving bin_io, compare, enumerate, sexp, string ~capitalize:"Title Case"]
 end
 
-(* TODO: Avoid the indirection by using [include functor Comparator.Make] when
+(* TODO-someday: Avoid the indirection by using [include functor Comparator.Make] when
    it is upstreamed in the future. See:
    [https://github.com/ocaml-flambda/flambda-backend/blob/main/ocaml/jane/doc/extensions/include-functor.md]
 *)

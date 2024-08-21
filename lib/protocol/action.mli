@@ -50,7 +50,7 @@ module Draw_or_play : sig
   (** Returns the outcome, updated hand and updated deck given the parameters. *)
   val handle : t -> hand:Hand.t -> deck:Deck.t -> (Outcome.t * Hand.t * Deck.t) Or_error.t
 
-  (* TODO: Accomodate shortened forms or unique prefixes of an action. *)
+  (* TODO-someday: Accomodate shortened forms or unique prefixes of an action. *)
   val of_string : string -> t Or_error.t
   val to_string : t -> string
   val all : t list

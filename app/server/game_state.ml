@@ -144,33 +144,13 @@ let start
   =
   let open Deferred.Or_error.Let_syntax in
   let player_cnt = List.length connections in
-  (* TODO-soon: Give a name to this part, perhaps [players_of_connections ~deck]. *)
+  (* TODO-someday: Provide a way to customise the starting deck and starting hand
+     size. *)
   let%bind deck =
     Deck.Without_exploding_kittens.default ~player_cnt ~shuffled:true |> Deferred.return
   in
-  let deck, connection_and_hands =
-    List.fold_map
-      connections
-      (* TODO-someday: Provide a way to customise the starting deck and starting hand
-         size. *)
-      ~init:deck
-      ~f:(fun deck connection ->
-        match Deck.Without_exploding_kittens.deal deck ~n:7 with
-        | Ok (hand, deck) ->
-          deck, (connection, Hand.add_card ~card:Defuse hand) |> Or_error.return
-        | Error _ as err -> deck, Or_error.tag err ~tag:"Deck is not sufficiently large")
-  in
-  let%bind connection_and_hands = Or_error.all connection_and_hands |> Deferred.return in
-  let%bind players =
-    Monitor.try_with_or_error (fun () ->
-      Deferred.List.map
-        ~how:(`Max_concurrent_jobs 16)
-        connection_and_hands
-        ~f:(fun (connection, hand) ->
-          let%map.Deferred name =
-            Rpc.Rpc.dispatch Rpcs.Name.rpc connection () |> Deferred.Or_error.ok_exn
-          in
-          Player.{ connection; hand; name }))
+  let%bind deck, players =
+    Player.players_of_connections connections ~deck ~cards_per_player:7
   in
   match List.permute players with
   | [] | [ _ ] ->

@@ -26,8 +26,6 @@ type t =
     The deck expects a certain player count. An error will be returned
     if there are too few or too many connections. Refer to
     [Deck.default_without_exploding_kittens].
-    An error will also be returned if the deck is not of sufficient size for
-    the number of players.
 
     Additional callback function parameters describe how the server should
     handle the event described by the name. Functions from [Interaction] should

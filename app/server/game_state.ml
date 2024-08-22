@@ -146,8 +146,7 @@ let start
   let player_cnt = List.length connections in
   (* TODO-soon: Give a name to this part, perhaps [players_of_connections ~deck]. *)
   let%bind deck =
-    Deck.default_without_exploding_kittens ~player_cnt ~deterministically:false
-    |> Deferred.return
+    Deck.Without_exploding_kittens.default ~player_cnt ~shuffled:true |> Deferred.return
   in
   let deck, connection_and_hands =
     List.fold_map
@@ -156,7 +155,7 @@ let start
          size. *)
       ~init:deck
       ~f:(fun deck connection ->
-        match Deck.draw_hand deck ~n:7 with
+        match Deck.Without_exploding_kittens.deal deck ~n:7 with
         | Ok (hand, deck) ->
           deck, (connection, Hand.add_card ~card:Defuse hand) |> Or_error.return
         | Error _ as err -> deck, Or_error.tag err ~tag:"Deck is not sufficiently large")

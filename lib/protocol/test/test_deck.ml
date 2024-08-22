@@ -77,3 +77,67 @@ let%expect_test "inserting into a deck at large negative position makes it first
     ~position:(-7);
   [%expect {| (deck ((Powerless Tacocat) Defuse Defuse Defuse)) |}]
 ;;
+
+let add_exploding_kittens_and_print ~deck ~player_cnt =
+  let deck = Deck.add_exploding_kittens deck ~player_cnt ~deterministically:true in
+  print_s [%message (deck : Deck.t)]
+;;
+
+let%expect_test "add_exploding_kittens with 1 player -> 0 added and shuffled" =
+  add_exploding_kittens_and_print
+    ~deck:
+      (Deck.For_testing.of_card_list
+         [ Powerless Beard_cat
+         ; Powerless Cattermelon
+         ; Powerless Hairy_potato_cat
+         ; Powerless Rainbow_ralphing_cat
+         ; Powerless Tacocat
+         ])
+    ~player_cnt:1;
+  [%expect
+    {|
+    (deck
+     ((Powerless Rainbow_ralphing_cat) (Powerless Tacocat)
+      (Powerless Hairy_potato_cat) (Powerless Cattermelon) (Powerless Beard_cat)))
+    |}]
+;;
+
+let%expect_test "add_exploding_kittens with 2 players -> 1 added and shuffled" =
+  add_exploding_kittens_and_print
+    ~deck:
+      (Deck.For_testing.of_card_list
+         [ Powerless Beard_cat
+         ; Powerless Cattermelon
+         ; Powerless Hairy_potato_cat
+         ; Powerless Rainbow_ralphing_cat
+         ; Powerless Tacocat
+         ])
+    ~player_cnt:2;
+  [%expect
+    {|
+    (deck
+     ((Powerless Rainbow_ralphing_cat) (Powerless Beard_cat)
+      (Powerless Cattermelon) Exploding_kitten (Powerless Tacocat)
+      (Powerless Hairy_potato_cat)))
+    |}]
+;;
+
+let%expect_test "add_exploding_kittens with 6 players -> 5 added and shuffled" =
+  add_exploding_kittens_and_print
+    ~deck:
+      (Deck.For_testing.of_card_list
+         [ Powerless Beard_cat
+         ; Powerless Cattermelon
+         ; Powerless Hairy_potato_cat
+         ; Powerless Rainbow_ralphing_cat
+         ; Powerless Tacocat
+         ])
+    ~player_cnt:6;
+  [%expect
+    {|
+    (deck
+     (Exploding_kitten (Powerless Cattermelon) Exploding_kitten Exploding_kitten
+      (Powerless Tacocat) Exploding_kitten (Powerless Rainbow_ralphing_cat)
+      (Powerless Hairy_potato_cat) Exploding_kitten (Powerless Beard_cat)))
+    |}]
+;;

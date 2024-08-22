@@ -143,11 +143,10 @@ let start
   ~on_win
   =
   let open Deferred.Or_error.Let_syntax in
+  let player_cnt = List.length connections in
   (* TODO-soon: Give a name to this part, perhaps [players_of_connections ~deck]. *)
   let%bind deck =
-    Deck.default_without_exploding_kittens
-      ~player_cnt:(List.length connections)
-      ~deterministically:false
+    Deck.default_without_exploding_kittens ~player_cnt ~deterministically:false
     |> Deferred.return
   in
   let deck, connection_and_hands =
@@ -181,11 +180,7 @@ let start
   | current_player :: hd :: tl ->
     (* TODO-soon: Would be nice to give this initial state a name. *)
     Monitor.try_with_or_error (fun () ->
-      { deck =
-          Deck.add_exploding_kittens
-            deck
-            ~n:(List.length players - 1)
-            ~deterministically:false
+      { deck = Deck.add_exploding_kittens deck ~player_cnt ~deterministically:false
       ; current_player
       ; other_players = Nonempty_list.create hd tl
       ; next_step = Draw_or_play

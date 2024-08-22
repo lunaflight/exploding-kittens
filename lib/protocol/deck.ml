@@ -36,8 +36,9 @@ let default_without_exploding_kittens ~player_cnt ~deterministically =
     |> Or_error.return
 ;;
 
-let add_exploding_kittens t ~n ~deterministically =
-  t @ List.init n ~f:(fun _i -> Card.Exploding_kitten) |> shuffle ~deterministically
+let add_exploding_kittens t ~player_cnt ~deterministically =
+  t @ List.init (player_cnt - 1) ~f:(fun _i -> Card.Exploding_kitten)
+  |> shuffle ~deterministically
 ;;
 
 let draw_hand t ~n =

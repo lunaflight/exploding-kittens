@@ -18,11 +18,12 @@ val default_without_exploding_kittens
   -> deterministically:bool
   -> t Or_error.t
 
-(* TODO-soon: This should take in a [player_cnt] parameter instead of [n]. *)
+(** Adds [player_cnt - 1] exploding kittens to a deck and shuffles it according to
+    [deterministically]. This ensures that there will remain 1 player at the end
+    of the game who is the winner.
 
-(** Adds [n] exploding kittens to a deck and shuffles it according to
-    [deterministically]. *)
-val add_exploding_kittens : t -> n:int -> deterministically:bool -> t
+    It is expected that [player_cnt >= 1] and does no validation. *)
+val add_exploding_kittens : t -> player_cnt:int -> deterministically:bool -> t
 
 (* TODO-soon: Lint a [Without_exploding_kittens] module and rename [draw_hand]
    to [deal] under only that module, to make it safer. *)

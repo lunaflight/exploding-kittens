@@ -22,7 +22,7 @@ let command =
              Rpc.Connection.client (Tcp.Where_to_connect.of_host_and_port player)
              >>| Result.ok_exn)
          in
-         Game_state.start
+         Game_state.start_game
            ~connections
            ~get_draw_or_play:Interaction.get_draw_or_play
            ~get_exploding_kitten_insert_position:

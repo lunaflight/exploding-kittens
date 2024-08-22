@@ -39,6 +39,15 @@ type t =
   | Winner of Player.t
   | Ongoing of Instant.t
 
+let init ~deck ~first_player ~other_players =
+  match other_players with
+  | [] -> Winner first_player
+  | hd :: tl ->
+    let other_players = Nonempty_list.create hd tl in
+    Ongoing
+      { deck; current_player = first_player; other_players; next_step = Draw_or_play }
+;;
+
 (* TODO-someday: It could be nice if the player wasn't deleted - maybe dead players
    should be able to see all actions that happen as they spectate. *)
 let eliminate_current_player
@@ -135,7 +144,7 @@ let advance_until_win
   on_win ~player:winner ~message:"You won!"
 ;;
 
-let start
+let start_game
   ~connections
   ~get_draw_or_play
   ~get_exploding_kitten_insert_position
@@ -156,15 +165,12 @@ let start
   | [] | [ _ ] ->
     Deferred.Or_error.error_s
       [%message "More than 1 player is required to start the game"]
-  | current_player :: hd :: tl ->
-    (* TODO-soon: Would be nice to give this initial state a name. *)
+  | first_player :: other_players ->
     Monitor.try_with_or_error (fun () ->
-      { deck = Deck.add_exploding_kittens deck ~player_cnt ~deterministically:false
-      ; current_player
-      ; other_players = Nonempty_list.create hd tl
-      ; next_step = Draw_or_play
-      }
-      |> Ongoing
+      init
+        ~deck:(Deck.add_exploding_kittens deck ~player_cnt ~deterministically:false)
+        ~first_player
+        ~other_players
       |> advance_until_win
            ~get_draw_or_play
            ~get_exploding_kitten_insert_position

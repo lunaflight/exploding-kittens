@@ -32,7 +32,7 @@ type t =
     help in filling these out.
 
     The [Deferred.t] becomes determined when there is a winner. *)
-val start
+val start_game
   :  connections:Rpc.Connection.t list
   -> get_draw_or_play:
        (player:Player.t

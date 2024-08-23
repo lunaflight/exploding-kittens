@@ -79,7 +79,7 @@ module Get_draw_or_play = struct
 
     let%expect_test _ =
       print_endline [%bin_digest: t];
-      [%expect {| bfd3f68698ac19c962b1697c6f4e0642 |}];
+      [%expect {| ba8ec618a88dfe48ba1533696dc39a8a |}];
       return ()
     ;;
   end

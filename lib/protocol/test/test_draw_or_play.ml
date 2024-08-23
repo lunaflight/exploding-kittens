@@ -1,15 +1,27 @@
 open! Core
 open Protocol_lib
+open Player_hands.For_testing.Hand_or_eliminated
 
-let handle_and_print action ~hand ~deck =
+let%expect_test "format doc looks ok" =
+  print_string Action.Draw_or_play.format_doc;
+  [%expect {| draw|CARD|double CARD@TARGET_NAME |}]
+;;
+
+let handle_and_print action ~hand ~deck ~other_player_and_hands =
   let player_under_test = Player_name.of_string "player_under_test" in
-  let player_hands = Player_hands.For_testing.of_alist_exn [ player_under_test, hand ] in
+  let player_hands =
+    other_player_and_hands
+    |> List.map ~f:(fun (player, hand) ->
+      Player_name.of_string player, Hand.of_cards hand |> Playing)
+    |> List.append [ player_under_test, Hand.of_cards hand |> Playing ]
+    |> Player_hands.For_testing.of_alist_exn
+  in
   match
     Action.Draw_or_play.handle
       action
       ~player_hands
       ~player_name:player_under_test
-      ~deck
+      ~deck:(Deck.For_testing.of_card_list deck)
       ~deterministically:true
   with
   | Error error -> print_s [%message (error : Error.t)]
@@ -19,19 +31,17 @@ let handle_and_print action ~hand ~deck =
 ;;
 
 let%expect_test "draw from empty deck -> Error" =
-  handle_and_print Draw ~hand:(Hand.of_cards []) ~deck:(Deck.For_testing.of_card_list []);
+  handle_and_print Draw ~hand:[] ~deck:[] ~other_player_and_hands:[];
   [%expect {| (error "Attempting to draw from an empty deck") |}]
 ;;
 
 let%expect_test "draw Exploding_kitten without defuse -> Exploded" =
-  handle_and_print
-    Draw
-    ~hand:(Hand.of_cards [])
-    ~deck:(Deck.For_testing.of_card_list [ Exploding_kitten ]);
+  handle_and_print Draw ~hand:[] ~deck:[ Exploding_kitten ] ~other_player_and_hands:[];
   [%expect
     {|
     ((outcome Exploded)
-     (player_hands ((player_under_test ((Exploding_kitten 1))))) (deck ()))
+     (player_hands ((player_under_test (Playing ((Exploding_kitten 1))))))
+     (deck ()))
     |}]
 ;;
 
@@ -40,53 +50,58 @@ let%expect_test "draw Exploding_kitten with defuse -> Defused and consumed witho
   =
   handle_and_print
     Draw
-    ~hand:(Hand.of_cards [ Defuse ])
-    ~deck:(Deck.For_testing.of_card_list [ Exploding_kitten ]);
-  [%expect {| ((outcome Defused) (player_hands ((player_under_test ()))) (deck ())) |}]
+    ~hand:[ Defuse ]
+    ~deck:[ Exploding_kitten ]
+    ~other_player_and_hands:[];
+  [%expect
+    {|
+    ((outcome Defused) (player_hands ((player_under_test (Playing ()))))
+     (deck ()))
+    |}]
 ;;
 
 let%expect_test "draw non-Exploding_kitten -> drew successfully" =
   handle_and_print
     Draw
-    ~hand:(Hand.of_cards [])
-    ~deck:(Deck.For_testing.of_card_list [ Powerless Cattermelon; Exploding_kitten ]);
+    ~hand:[]
+    ~deck:[ Powerless Cattermelon; Exploding_kitten ]
+    ~other_player_and_hands:[];
   [%expect
     {|
     ((outcome (Drew_safely (Powerless Cattermelon)))
-     (player_hands ((player_under_test (((Powerless Cattermelon) 1)))))
+     (player_hands ((player_under_test (Playing (((Powerless Cattermelon) 1))))))
      (deck (Exploding_kitten)))
     |}]
 ;;
 
 let%expect_test "play Power without owning -> error" =
-  handle_and_print
-    (Play Skip)
-    ~hand:(Hand.of_cards [])
-    ~deck:(Deck.For_testing.of_card_list []);
-  [%expect {| (error ("Card is not owned" (card (Power Skip)) (t ()))) |}]
+  handle_and_print (Play Skip) ~hand:[] ~deck:[] ~other_player_and_hands:[];
+  [%expect {| (error ("Card is not owned" (t ()) (card (Power Skip)))) |}]
 ;;
 
 let%expect_test "play See_the_future with deck of 0 cards -> consumed and 0 seen" =
   handle_and_print
     (Play See_the_future)
-    ~hand:(Hand.of_cards [ Power See_the_future ])
-    ~deck:(Deck.For_testing.of_card_list []);
+    ~hand:[ Power See_the_future ]
+    ~deck:[]
+    ~other_player_and_hands:[];
   [%expect
     {|
-    ((outcome (Saw_the_future ())) (player_hands ((player_under_test ())))
-     (deck ()))
+    ((outcome (Saw_the_future ()))
+     (player_hands ((player_under_test (Playing ())))) (deck ()))
     |}]
 ;;
 
 let%expect_test "play See_the_future with deck of 1 card -> consumed and 1 seen" =
   handle_and_print
     (Play See_the_future)
-    ~hand:(Hand.of_cards [ Power See_the_future ])
-    ~deck:(Deck.For_testing.of_card_list [ Exploding_kitten ]);
+    ~hand:[ Power See_the_future ]
+    ~deck:[ Exploding_kitten ]
+    ~other_player_and_hands:[];
   [%expect
     {|
     ((outcome (Saw_the_future (Exploding_kitten)))
-     (player_hands ((player_under_test ()))) (deck (Exploding_kitten)))
+     (player_hands ((player_under_test (Playing ())))) (deck (Exploding_kitten)))
     |}]
 ;;
 
@@ -94,21 +109,21 @@ let%expect_test "play See_the_future with deck of 4 cards -> consumed and 3 seen
   =
   handle_and_print
     (Play See_the_future)
-    ~hand:(Hand.of_cards [ Power See_the_future ])
+    ~hand:[ Power See_the_future ]
     ~deck:
-      (Deck.For_testing.of_card_list
-         [ Powerless Beard_cat
-         ; Powerless Cattermelon
-         ; Powerless Rainbow_ralphing_cat
-         ; Power Skip
-         ]);
+      [ Powerless Beard_cat
+      ; Powerless Cattermelon
+      ; Powerless Rainbow_ralphing_cat
+      ; Power Skip
+      ]
+    ~other_player_and_hands:[];
   [%expect
     {|
     ((outcome
       (Saw_the_future
        ((Powerless Beard_cat) (Powerless Cattermelon)
         (Powerless Rainbow_ralphing_cat))))
-     (player_hands ((player_under_test ())))
+     (player_hands ((player_under_test (Playing ()))))
      (deck
       ((Powerless Beard_cat) (Powerless Cattermelon)
        (Powerless Rainbow_ralphing_cat) (Power Skip))))
@@ -116,36 +131,90 @@ let%expect_test "play See_the_future with deck of 4 cards -> consumed and 3 seen
 ;;
 
 let%expect_test "play Skip -> consumed and no card drawn" =
-  handle_and_print
-    (Play Skip)
-    ~hand:(Hand.of_cards [ Power Skip ])
-    ~deck:(Deck.For_testing.of_card_list []);
-  [%expect {| ((outcome Skipped) (player_hands ((player_under_test ()))) (deck ())) |}]
+  handle_and_print (Play Skip) ~hand:[ Power Skip ] ~deck:[] ~other_player_and_hands:[];
+  [%expect
+    {|
+    ((outcome Skipped) (player_hands ((player_under_test (Playing ()))))
+     (deck ()))
+    |}]
 ;;
 
 let%expect_test "play Shuffle -> consumed and deck is shuffled" =
   handle_and_print
     (Play Shuffle)
-    ~hand:(Hand.of_cards [ Power Shuffle ])
+    ~hand:[ Power Shuffle ]
     ~deck:
-      (Deck.For_testing.of_card_list
-         [ Powerless Beard_cat
-         ; Powerless Cattermelon
-         ; Powerless Hairy_potato_cat
-         ; Powerless Rainbow_ralphing_cat
-         ; Powerless Tacocat
-         ; Defuse
-         ; Power Skip
-         ; Power Shuffle
-         ; Power See_the_future
-         ; Exploding_kitten
-         ]);
+      [ Powerless Beard_cat
+      ; Powerless Cattermelon
+      ; Powerless Hairy_potato_cat
+      ; Powerless Rainbow_ralphing_cat
+      ; Powerless Tacocat
+      ; Defuse
+      ; Power Skip
+      ; Power Shuffle
+      ; Power See_the_future
+      ; Exploding_kitten
+      ]
+    ~other_player_and_hands:[];
   [%expect
     {|
-    ((outcome Shuffled) (player_hands ((player_under_test ())))
+    ((outcome Shuffled) (player_hands ((player_under_test (Playing ()))))
      (deck
       (Defuse (Powerless Cattermelon) (Power Skip) (Power See_the_future)
        (Powerless Tacocat) Exploding_kitten (Powerless Rainbow_ralphing_cat)
        (Powerless Hairy_potato_cat) (Power Shuffle) (Powerless Beard_cat))))
     |}]
+;;
+
+let%expect_test "play Double Tacocat -> card stolen from target" =
+  handle_and_print
+    (Double (Powerless Tacocat, Player_name.of_string "target"))
+    ~hand:[ Powerless Tacocat; Powerless Tacocat ]
+    ~deck:[]
+    ~other_player_and_hands:[ "target", [ Defuse ] ];
+  [%expect
+    {|
+    ((outcome (Stole_randomly (Defuse target)))
+     (player_hands
+      ((player_under_test (Playing ((Defuse 1)))) (target (Playing ()))))
+     (deck ()))
+    |}]
+;;
+
+let%expect_test "play Double Tacocat with insufficient Tacocats -> error" =
+  handle_and_print
+    (Double (Powerless Tacocat, Player_name.of_string "target"))
+    ~hand:[ Powerless Tacocat ]
+    ~deck:[]
+    ~other_player_and_hands:[ "target", [ Defuse ] ];
+  [%expect
+    {|
+    (error
+     ("Not enough copies owned" (t (((Powerless Tacocat) 1)))
+      (card (Powerless Tacocat)) (n 2)))
+    |}]
+;;
+
+let%expect_test "play Double Tacocat to nonexistent player -> error" =
+  handle_and_print
+    (Double (Powerless Tacocat, Player_name.of_string "target"))
+    ~hand:[ Powerless Tacocat; Powerless Tacocat ]
+    ~deck:[]
+    ~other_player_and_hands:[];
+  [%expect
+    {|
+    (error
+     (("Could not find player name" (player_name target)
+       (t ((player_under_test (Playing ())))))
+      ("key not found" target)))
+    |}]
+;;
+
+let%expect_test "play Double Tacocat to player with no cards -> error" =
+  handle_and_print
+    (Double (Powerless Tacocat, Player_name.of_string "target"))
+    ~hand:[ Powerless Tacocat; Powerless Tacocat ]
+    ~deck:[]
+    ~other_player_and_hands:[ "target", [] ];
+  [%expect {| (error ("Target has an empty hand" (target target))) |}]
 ;;

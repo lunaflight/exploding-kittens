@@ -52,11 +52,20 @@ let init ~deck ~first_player ~other_players =
 let eliminate_current_player
   ({ deck; player_hands; turn_order; next_step = (_ : Next_step.t) } : Instant.t)
   =
+  let current_player = Turn_order.current_player turn_order in
   match Turn_order.eliminate_current_player turn_order with
   (* TODO-soon: Use [spectators] to broadcast the winner. *)
   | One_left (winner, _spectators) -> Winner winner
   | More_than_one_left turn_order ->
-    Ongoing { deck; player_hands; turn_order; next_step = Draw_or_play }
+    Ongoing
+      { deck
+      ; player_hands =
+          Player_hands.eliminate player_hands ~player_name:current_player
+          |> Or_error.ok_exn
+          (* This is okay since [current_player] is known. *)
+      ; turn_order
+      ; next_step = Draw_or_play
+      }
 ;;
 
 (* TODO-someday: If the number of callbacks becomes too high (> 5?), consider linting a
@@ -82,16 +91,7 @@ let advance
     let outcome, deck =
       Action.Insert_exploding_kitten.handle ~position ~deck:instant.deck
     in
-    (* TODO-soon: A hint needs to be added so [on_outcome] is called when there is an
-       [outcome]. A good idea is to expose some [Instant] updating function that
-       calls that as a side effect. The following is too vulnerable to mistakes.
-       There is also some reduplication here. *)
-    let%map () =
-      on_outcome
-        ~current_player
-        ~waiting_players:(Turn_order.waiting_players instant.turn_order)
-        ~outcome
-    in
+    let%map () = on_outcome ~turn_order:instant.turn_order ~outcome in
     Ongoing { instant with deck; next_step = Next_step.of_outcome outcome }
   | Draw_or_play ->
     (* This is fine, as [instant.current_player] is a known player. *)
@@ -114,16 +114,12 @@ let advance
             ~deck:instant.deck
             ~deterministically:false
         with
-        | Error _ -> `Repeat (Some "This action is invalid.")
+        | Error error ->
+          `Repeat (Some [%string "Received error: %{Error.to_string_hum error}"])
         | Ok result -> `Finished result)
     in
     let instant = Instant.update instant ~deck ~player_hands in
-    let%map () =
-      on_outcome
-        ~current_player
-        ~waiting_players:(Turn_order.waiting_players instant.turn_order)
-        ~outcome
-    in
+    let%map () = on_outcome ~turn_order:instant.turn_order ~outcome in
     Ongoing { instant with next_step = Next_step.of_outcome outcome }
 ;;
 
@@ -174,6 +170,7 @@ let start_game
       [%message "More than 1 player is required to start the game"]
   | first_player :: other_players ->
     let%bind instant = init ~deck ~first_player ~other_players |> Deferred.return in
+    (* TODO-soon: Everybody should be let known of their starting hand upon load. *)
     Monitor.try_with_or_error (fun () ->
       advance_until_win
         instant

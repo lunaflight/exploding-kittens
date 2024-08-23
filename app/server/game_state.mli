@@ -38,12 +38,6 @@ val start_game
         -> Action.Draw_or_play.t Deferred.t)
   -> get_exploding_kitten_insert_position:
        (player_name:Player_name.t -> deck_size:int -> int Deferred.t)
-  -> (* TODO-soon: Rename this callback function so spectators and
-        [current_player] know about the uncensored information. *)
-     on_outcome:
-       (current_player:Player_name.t
-        -> waiting_players:Player_name.t list
-        -> outcome:Outcome.t
-        -> unit Deferred.t)
+  -> on_outcome:(turn_order:Turn_order.t -> outcome:Outcome.t -> unit Deferred.t)
   -> on_win:(player_name:Player_name.t -> message:string -> unit Deferred.t)
   -> unit Or_error.t Deferred.t

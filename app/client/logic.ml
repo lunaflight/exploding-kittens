@@ -30,15 +30,10 @@ let get ~prelude ~prompt ~input_hint ~of_string_or_error =
 
 let get_draw_or_play ~hand =
   (* TODO-soon: Analyze which actions are playable and output them. *)
-  let possible_strings =
-    Action.Draw_or_play.all
-    |> List.map ~f:Action.Draw_or_play.to_string
-    |> String.concat ~sep:"|"
-  in
   get
     ~prelude:[%string "Your hand: %{hand#Hand}"]
     ~prompt:[%string "Provide an action"]
-    ~input_hint:possible_strings
+    ~input_hint:Action.Draw_or_play.format_doc
     ~of_string_or_error:Action.Draw_or_play.of_string
 ;;
 

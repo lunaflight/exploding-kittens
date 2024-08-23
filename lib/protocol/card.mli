@@ -6,7 +6,11 @@ module Power : sig
     | See_the_future
     | Skip
     | Shuffle
-  [@@deriving bin_io, enumerate, sexp, string]
+  [@@deriving bin_io, enumerate, sexp]
+
+  val of_string_exn : string -> t
+  val of_string_or_error : string -> t Or_error.t
+  val to_string : t -> string
 end
 
 module Powerless : sig
@@ -28,4 +32,6 @@ type t =
 include Comparable.S_binable with type t := t
 
 val all : t list
+val of_string_exn : string -> t
+val of_string_or_error : string -> t Or_error.t
 val to_string : t -> string

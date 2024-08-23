@@ -10,6 +10,7 @@ let all_mocked_outcomes =
       ; [ Exploding_kitten ]
       ; [ Powerless Tacocat; Power Skip; Power See_the_future ]
       ]
+    ~stole_randomly:[ Powerless Cattermelon, Player_name.of_string "Somebody" ]
 ;;
 
 let print_alerts_of_outcomes outcomes ~alert_f =
@@ -40,20 +41,22 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
     ((outcome (Saw_the_future ()))
      (alert "You did not see any cards as the deck is empty."))
     ((outcome (Saw_the_future (Exploding_kitten)))
-     (alert "You saw 1 card at the top of the deck: Exploding Kitten"))
+     (alert "You saw 1 card at the top of the deck: Exploding Kitten."))
     ((outcome
       (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
      (alert
-      "You saw 3 cards at the top of the deck: Tacocat, Skip, See The Future"))
+      "You saw 3 cards at the top of the deck: Tacocat, Skip, See The Future."))
     ((outcome Skipped) (alert "You skipped your turn."))
     ((outcome Shuffled) (alert "You shuffled the deck."))
+    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
+     (alert "You stole a(n) Cattermelon from Somebody."))
     |}]
 ;;
 
 let%expect_test "outcome alerts for others look correct - sensitive info is omitted" =
   print_alerts_of_outcomes
     all_mocked_outcomes
-    ~alert_f:(Outcome.to_others_alert ~player_name:(Player_name.of_string "Alice"));
+    ~alert_f:(Outcome.to_censored_alert ~player_name:(Player_name.of_string "Alice"));
   [%expect
     {|
     ((outcome Defused) (alert "Alice defused an exploding kitten!"))
@@ -79,5 +82,44 @@ let%expect_test "outcome alerts for others look correct - sensitive info is omit
      (alert "Alice saw the future of 3 cards at the top of the deck."))
     ((outcome Skipped) (alert "Alice skipped their turn."))
     ((outcome Shuffled) (alert "Alice shuffled the deck."))
+    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
+     (alert "Alice stole a random card from Somebody."))
+    |}]
+;;
+
+let print_specialised_alerts_of_outcomes outcomes ~player_name =
+  outcomes
+  |> List.iter ~f:(fun outcome ->
+    match Outcome.to_specialised_alert outcome ~player_name with
+    | None -> print_s [%message (outcome : Outcome.t) "<no specialised alert>"]
+    | Some (player, alert) ->
+      print_s [%message (outcome : Outcome.t) (player : Player_name.t) (alert : string)])
+;;
+
+let%expect_test "specialised outcome alerts and recipients look correct - full feedback \
+                 is given accordingly"
+  =
+  print_specialised_alerts_of_outcomes
+    all_mocked_outcomes
+    ~player_name:(Player_name.of_string "Alice");
+  [%expect
+    {|
+    ((outcome Defused) "<no specialised alert>")
+    ((outcome (Drew_safely (Powerless Cattermelon))) "<no specialised alert>")
+    ((outcome Exploded) "<no specialised alert>")
+    ((outcome (Inserted_exploding_kitten -10)) "<no specialised alert>")
+    ((outcome (Inserted_exploding_kitten -1)) "<no specialised alert>")
+    ((outcome (Inserted_exploding_kitten 0)) "<no specialised alert>")
+    ((outcome (Inserted_exploding_kitten 1)) "<no specialised alert>")
+    ((outcome (Inserted_exploding_kitten 10)) "<no specialised alert>")
+    ((outcome (Saw_the_future ())) "<no specialised alert>")
+    ((outcome (Saw_the_future (Exploding_kitten))) "<no specialised alert>")
+    ((outcome
+      (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
+     "<no specialised alert>")
+    ((outcome Skipped) "<no specialised alert>")
+    ((outcome Shuffled) "<no specialised alert>")
+    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
+     (player Somebody) (alert "Alice stole a(n) Cattermelon from you."))
     |}]
 ;;

@@ -5,7 +5,12 @@ module Draw_or_play : sig
   type t =
     | Draw
     | Play of Card.Power.t
+    | Double of (Card.t * Player_name.t)
+    (** The [Player_name.t] represents the target of this action. *)
   [@@deriving bin_io, sexp]
+
+  (** Returns a format hint doc for how [of_string] should be used. *)
+  val format_doc : string
 
   (** Returns the outcome and updated state of the game, after [player_name]
       performs [t].
@@ -22,7 +27,10 @@ module Draw_or_play : sig
   (* TODO-someday: Accomodate shortened forms or unique prefixes of an action. *)
   val of_string : string -> t Or_error.t
   val to_string : t -> string
-  val all : t list
+
+  module For_testing : sig
+    val all_mocked : double_target:Player_name.t -> t list
+  end
 end
 
 module Insert_exploding_kitten : sig

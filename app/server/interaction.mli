@@ -2,12 +2,12 @@ open! Core
 open! Async
 open Protocol_lib
 
-(** Sends an RPC to all [Player_name.t]s about the [outcome]. Sensitive data for
-    [waiting_players] will be redacted. *)
+(** Sends a personalised RPC to all [Player_name.t]s about the [outcome].
+    [turn_order] will be used to determine the [current_player] and how much
+    information each player should be told. *)
 val broadcast_to_players_exn
   :  Connector.t
-  -> current_player:Player_name.t
-  -> waiting_players:Player_name.t list
+  -> turn_order:Turn_order.t
   -> outcome:Outcome.t
   -> unit Deferred.t
 

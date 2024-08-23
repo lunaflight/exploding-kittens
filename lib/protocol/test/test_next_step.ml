@@ -6,6 +6,7 @@ let all_mocked_outcomes =
     ~drew_safely:[ Powerless Cattermelon ]
     ~inserted_exploding_kitten:[ 0 ]
     ~saw_the_future:[ [] ]
+    ~stole_randomly:[ Powerless Cattermelon, Player_name.of_string "Somebody" ]
 ;;
 
 let print_next_steps_of_outcomes outcomes =
@@ -26,5 +27,7 @@ let%expect_test "next step of outcomes" =
     ((outcome (Saw_the_future ())) (next_step Draw_or_play))
     ((outcome Skipped) (next_step Pass_turn))
     ((outcome Shuffled) (next_step Draw_or_play))
+    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
+     (next_step Draw_or_play))
     |}]
 ;;

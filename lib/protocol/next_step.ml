@@ -7,8 +7,9 @@ type t =
   | Pass_turn
 [@@deriving sexp_of]
 
-let of_outcome (outcome : Outcome.t) =
-  match outcome with
+let of_outcome =
+  let open Outcome in
+  function
   | Defused -> Insert_exploding_kitten
   | Drew_safely _ -> Pass_turn
   | Exploded -> Eliminate_player
@@ -16,4 +17,5 @@ let of_outcome (outcome : Outcome.t) =
   | Saw_the_future _ -> Draw_or_play
   | Skipped -> Pass_turn
   | Shuffled -> Draw_or_play
+  | Stole_randomly _ -> Draw_or_play
 ;;

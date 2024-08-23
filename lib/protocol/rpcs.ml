@@ -1,7 +1,7 @@
 open! Core
 open! Async
 
-module Name = struct
+module Player_name = struct
   module Query = struct
     type t = unit [@@deriving sexp, bin_io]
 
@@ -13,7 +13,7 @@ module Name = struct
   end
 
   module Response = struct
-    type t = string [@@deriving sexp, bin_io]
+    type t = Player_name.t [@@deriving sexp, bin_io]
 
     let%expect_test _ =
       print_endline [%bin_digest: t];

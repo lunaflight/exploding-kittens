@@ -53,7 +53,7 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
 let%expect_test "outcome alerts for others look correct - sensitive info is omitted" =
   print_alerts_of_outcomes
     all_mocked_outcomes
-    ~alert_f:(Action.Outcome.to_others_alert ~name:"Alice");
+    ~alert_f:(Action.Outcome.to_others_alert ~player_name:(Player_name.of_string "Alice"));
   [%expect
     {|
     ((outcome Defused) (alert "Alice defused an exploding kitten!"))

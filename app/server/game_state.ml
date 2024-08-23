@@ -6,52 +6,82 @@ module Next_step = Action.Next_step
 module Instant = struct
   type t =
     { deck : Deck.t
-    ; current_player : Player.t
-    ; other_players : Player.t Nonempty_list.t
+    ; player_hands : Player_hands.t
+    ; current_player : Player_name.t
+    ; other_players : Player_name.t Nonempty_list.t
     ; next_step : Next_step.t
     }
   [@@deriving fields ~getters]
 
   let update
-    { deck = (_ : Deck.t)
-    ; current_player = { connection; hand = (_ : Hand.t); name }
+    { deck = (_ : Deck.t); player_hands; current_player; other_players; next_step }
+    ~deck
+    ~current_player_hand
+    =
+    { deck
+    ; player_hands =
+        Player_hands.set_hand_exn
+          player_hands
+          ~player_name:current_player
+          ~hand:current_player_hand
+        (* This is fine, as [current_player] is a known player. *)
+    ; current_player
     ; other_players
     ; next_step
     }
-    ~deck
-    ~hand
-    =
-    { deck; current_player = { connection; hand; name }; other_players; next_step }
   ;;
 
-  let pass_turn { deck; current_player; other_players; next_step = (_ : Next_step.t) } =
+  let pass_turn
+    { deck; player_hands; current_player; other_players; next_step = (_ : Next_step.t) }
+    =
     let (next_player :: tl) = other_players in
     (* The following is equivalent to tl @ [ current_player ] without
          invoking [exn] functions. *)
     let other_players =
       List.rev tl |> Nonempty_list.create current_player |> Nonempty_list.reverse
     in
-    { deck; current_player = next_player; other_players; next_step = Draw_or_play }
+    { deck
+    ; player_hands
+    ; current_player = next_player
+    ; other_players
+    ; next_step = Draw_or_play
+    }
   ;;
 end
 
 type t =
-  | Winner of Player.t
+  | Winner of Player_name.t
   | Ongoing of Instant.t
 
 let init ~deck ~first_player ~other_players =
   match other_players with
-  | [] -> Winner first_player
+  | [] -> Winner first_player |> Or_error.return
   | hd :: tl ->
-    let other_players = Nonempty_list.create hd tl in
+    let%map.Or_error deck, player_hands =
+      Player_hands.init
+        ~player_names:(first_player :: other_players)
+        ~deck
+        ~cards_per_player:7
+        ~deterministically:false
+    in
     Ongoing
-      { deck; current_player = first_player; other_players; next_step = Draw_or_play }
+      { deck
+      ; player_hands
+      ; current_player = first_player
+      ; other_players = Nonempty_list.create hd tl
+      ; next_step = Draw_or_play
+      }
 ;;
 
 (* TODO-someday: It could be nice if the player wasn't deleted - maybe dead players
    should be able to see all actions that happen as they spectate. *)
 let eliminate_current_player
-  ({ deck; current_player = (_ : Player.t); other_players; next_step = (_ : Next_step.t) } :
+  ({ deck
+   ; player_hands
+   ; current_player = (_ : Player_name.t)
+   ; other_players
+   ; next_step = (_ : Next_step.t)
+   } :
     Instant.t)
   =
   match other_players with
@@ -59,6 +89,7 @@ let eliminate_current_player
   | current_player :: hd :: tl ->
     Ongoing
       { deck
+      ; player_hands
       ; current_player
       ; other_players = Nonempty_list.create hd tl
       ; next_step = Draw_or_play
@@ -76,7 +107,7 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
   | Insert_exploding_kitten ->
     let%bind position =
       get_exploding_kitten_insert_position
-        ~player:instant.current_player
+        ~player_name:instant.current_player
         ~deck_size:(Deck.size instant.deck)
     in
     let outcome, deck =
@@ -94,24 +125,28 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
     in
     Ongoing { instant with deck; next_step = Action.Next_step.of_outcome outcome }
   | Draw_or_play ->
+    (* This is fine, as [instant.current_player] is a known player. *)
+    let hand =
+      Player_hands.hand_exn instant.player_hands ~player_name:instant.current_player
+    in
     (* TODO-soon: It might be a good idea to refactor this interaction part
        elsewhere. It detracts from the main purpose of this function. *)
     let%bind outcome, hand, deck =
       Deferred.repeat_until_finished None (fun reprompt_context ->
         let%map action =
-          get_draw_or_play ~player:instant.current_player ~reprompt_context
+          get_draw_or_play ~player_name:instant.current_player ~hand ~reprompt_context
         in
         match
           Action.Draw_or_play.handle
             action
-            ~hand:instant.current_player.hand
+            ~hand
             ~deck:instant.deck
             ~deterministically:false
         with
         | Error _ -> `Repeat (Some "This action is invalid.")
         | Ok result -> `Finished result)
     in
-    let instant = Instant.update instant ~deck ~hand in
+    let instant = Instant.update instant ~deck ~current_player_hand:hand in
     let%map () =
       on_outcome
         ~current_player:instant.current_player
@@ -141,39 +176,37 @@ let advance_until_win
         in
         `Repeat game_state)
   in
-  on_win ~player:winner ~message:"You won!"
+  on_win ~player_name:winner ~message:"You won!"
 ;;
 
 let start_game
-  ~connections
+  ~connector
   ~get_draw_or_play
   ~get_exploding_kitten_insert_position
   ~on_outcome
   ~on_win
   =
   let open Deferred.Or_error.Let_syntax in
-  let player_cnt = List.length connections in
+  let player_names = Connector.player_names connector in
   (* TODO-someday: Provide a way to customise the starting deck and starting hand
      size. *)
   let%bind deck =
-    Deck.Without_exploding_kittens.default ~player_cnt ~shuffled:true |> Deferred.return
+    Deck.Without_exploding_kittens.default
+      ~player_cnt:(List.length player_names)
+      ~shuffled:true
+    |> Deferred.return
   in
-  let%bind deck, players =
-    Player.players_of_connections connections ~deck ~cards_per_player:7
-  in
-  match List.permute players with
+  match List.permute player_names with
   | [] | [ _ ] ->
     Deferred.Or_error.error_s
       [%message "More than 1 player is required to start the game"]
   | first_player :: other_players ->
+    let%bind instant = init ~deck ~first_player ~other_players |> Deferred.return in
     Monitor.try_with_or_error (fun () ->
-      init
-        ~deck:(Deck.add_exploding_kittens deck ~player_cnt ~deterministically:false)
-        ~first_player
-        ~other_players
-      |> advance_until_win
-           ~get_draw_or_play
-           ~get_exploding_kitten_insert_position
-           ~on_outcome
-           ~on_win)
+      advance_until_win
+        instant
+        ~get_draw_or_play
+        ~get_exploding_kitten_insert_position
+        ~on_outcome
+        ~on_win)
 ;;

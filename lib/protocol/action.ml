@@ -34,22 +34,23 @@ module Outcome = struct
     | Shuffled -> [%string "You shuffled the deck."]
   ;;
 
-  let to_others_alert t ~name =
+  let to_others_alert t ~player_name =
     match t with
-    | Defused -> [%string "%{name} defused an exploding kitten!"]
-    | Drew_safely _ -> [%string "%{name} drew a card."]
+    | Defused -> [%string "%{player_name#Player_name} defused an exploding kitten!"]
+    | Drew_safely _ -> [%string "%{player_name#Player_name} drew a card."]
     | Inserted_exploding_kitten _ ->
-      [%string "%{name} inserted an exploding kitten somewhere."]
-    | Exploded -> [%string "%{name} exploded!"]
+      [%string "%{player_name#Player_name} inserted an exploding kitten somewhere."]
+    | Exploded -> [%string "%{player_name#Player_name} exploded!"]
     | Saw_the_future cards ->
       let n_cards =
         match List.length cards with
         | 1 -> "1 card"
         | cnt -> [%string "%{cnt#Int} cards"]
       in
-      [%string "%{name} saw the future of %{n_cards} at the top of the deck."]
-    | Skipped -> [%string "%{name} skipped their turn."]
-    | Shuffled -> [%string "%{name} shuffled the deck."]
+      [%string
+        "%{player_name#Player_name} saw the future of %{n_cards} at the top of the deck."]
+    | Skipped -> [%string "%{player_name#Player_name} skipped their turn."]
+    | Shuffled -> [%string "%{player_name#Player_name} shuffled the deck."]
   ;;
 
   module For_testing = struct

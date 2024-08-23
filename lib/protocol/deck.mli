@@ -35,12 +35,12 @@ val shuffle : t -> deterministically:bool -> t
     [deterministically]. This ensures that there will remain 1 player at the end
     of the game who is the winner.
 
-    It is expected that [player_cnt >= 1] and does no validation. *)
+    An error is returned if [player_cnt < 1]. *)
 val add_exploding_kittens
   :  Without_exploding_kittens.t
   -> player_cnt:int
   -> deterministically:bool
-  -> t
+  -> t Or_error.t
 
 (** Draws 1 card from the deck. It returns a tuple of the drew card and the resulting deck.
     If the deck is empty, an error is returned. *)

@@ -13,9 +13,9 @@ module Outcome : sig
   [@@deriving sexp_of]
 
   (** Returns an alert to a spectator describing that another player with
-      [name] just got an outcome [t].
+      [player_name] just got an outcome [t].
       Refer to the [.ml] file for what the alert may look like. *)
-  val to_others_alert : t -> name:string -> string
+  val to_others_alert : t -> player_name:Player_name.t -> string
 
   (** Returns an alert to the action performer that they just got an outcome
       [t].

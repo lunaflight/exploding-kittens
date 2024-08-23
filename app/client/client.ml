@@ -21,7 +21,8 @@ let command =
                     Logic.get_exploding_kitten_insert_position ~deck_size)
              ; Rpc.Rpc.implement Rpcs.Message.rpc (fun _client message ->
                  Logic.print_string message |> return)
-             ; Rpc.Rpc.implement Rpcs.Name.rpc (fun _client () -> return name)
+             ; Rpc.Rpc.implement Rpcs.Player_name.rpc (fun _client () ->
+                 Player_name.of_string name |> return)
              ]
        in
        let%bind server =

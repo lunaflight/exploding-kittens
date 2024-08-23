@@ -22,12 +22,17 @@ let command =
              Rpc.Connection.client (Tcp.Where_to_connect.of_host_and_port player)
              >>| Result.ok_exn)
          in
+         let%bind connector =
+           Connector.of_connections connections |> Deferred.Or_error.ok_exn
+         in
          Game_state.start_game
-           ~connections
-           ~get_draw_or_play:Interaction.get_draw_or_play
+           ~connector
+           ~get_draw_or_play:(Interaction.get_draw_or_play_exn connector)
            ~get_exploding_kitten_insert_position:
-             Interaction.get_exploding_kitten_insert_position
-           ~on_outcome:Interaction.broadcast_to_players
-           ~on_win:(fun ~player ~message -> Player.send_message player message)
+             (Interaction.get_exploding_kitten_insert_position_exn connector)
+           ~on_outcome:(Interaction.broadcast_to_players_exn connector)
+           ~on_win:(fun ~player_name ~message ->
+             Connector.send_message connector ~player_name ~message
+             |> Deferred.Or_error.ok_exn)
          |> Deferred.Or_error.ok_exn)
 ;;

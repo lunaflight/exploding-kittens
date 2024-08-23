@@ -57,8 +57,12 @@ module Without_exploding_kittens = struct
 end
 
 let add_exploding_kittens t ~player_cnt ~deterministically =
-  t @ List.init (player_cnt - 1) ~f:(fun _i -> Card.Exploding_kitten)
-  |> shuffle ~deterministically
+  if player_cnt < 1
+  then Or_error.error_s [%message "There should be at least 1 player" (player_cnt : int)]
+  else
+    t @ List.init (player_cnt - 1) ~f:(fun _i -> Card.Exploding_kitten)
+    |> shuffle ~deterministically
+    |> Or_error.return
 ;;
 
 let draw t =

@@ -1,14 +1,14 @@
 open! Core
 open! Async
 
-(** Rpc for the server to ask the name of a client *)
-module Name : sig
+(** Rpc for the server to ask the player name of a client *)
+module Player_name : sig
   module Query : sig
     type t = unit
   end
 
   module Response : sig
-    type t = string
+    type t = Player_name.t
   end
 
   val rpc : (Query.t, Response.t) Rpc.Rpc.t

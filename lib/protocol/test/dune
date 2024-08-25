@@ -1,6 +1,6 @@
 (library
  (name test_protocol_lib)
- (libraries core protocol_lib)
+ (libraries core core_kernel.nonempty_list protocol_lib)
  (inline_tests)
  (preprocess
   (pps ppx_jane)))

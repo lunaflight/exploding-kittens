@@ -6,15 +6,13 @@ module Instant = struct
   type t =
     { deck : Deck.t
     ; player_hands : Player_hands.t
-    ; current_player : Player_name.t
-        (* TODO-soon: Add a module that encapsulates turn orders and alive players. *)
-    ; other_players : Player_name.t Nonempty_list.t
+    ; turn_order : Turn_order.t
     ; next_step : Next_step.t
     }
   [@@deriving fields ~getters]
 
   let update
-    { deck = (_ : Deck.t); player_hands; current_player; other_players; next_step }
+    { deck = (_ : Deck.t); player_hands; turn_order; next_step }
     ~deck
     ~current_player_hand
     =
@@ -22,28 +20,18 @@ module Instant = struct
     ; player_hands =
         Player_hands.set_hand_exn
           player_hands
-          ~player_name:current_player
+          ~player_name:(Turn_order.current_player turn_order)
           ~hand:current_player_hand
         (* This is fine, as [current_player] is a known player. *)
-    ; current_player
-    ; other_players
+    ; turn_order
     ; next_step
     }
   ;;
 
-  let pass_turn
-    { deck; player_hands; current_player; other_players; next_step = (_ : Next_step.t) }
-    =
-    let (next_player :: tl) = other_players in
-    (* The following is equivalent to tl @ [ current_player ] without
-         invoking [exn] functions. *)
-    let other_players =
-      List.rev tl |> Nonempty_list.create current_player |> Nonempty_list.reverse
-    in
+  let pass_turn { deck; player_hands; turn_order; next_step = (_ : Next_step.t) } =
     { deck
     ; player_hands
-    ; current_player = next_player
-    ; other_players
+    ; turn_order = Turn_order.pass_turn turn_order
     ; next_step = Draw_or_play
     }
   ;;
@@ -56,44 +44,28 @@ type t =
 let init ~deck ~first_player ~other_players =
   match other_players with
   | [] -> Winner first_player |> Or_error.return
-  | hd :: tl ->
-    let%map.Or_error deck, player_hands =
+  | second :: others ->
+    let%bind.Or_error deck, player_hands =
       Player_hands.init
         ~player_names:(first_player :: other_players)
         ~deck
         ~cards_per_player:7
         ~deterministically:false
     in
-    Ongoing
-      { deck
-      ; player_hands
-      ; current_player = first_player
-      ; other_players = Nonempty_list.create hd tl
-      ; next_step = Draw_or_play
-      }
+    let%map.Or_error turn_order =
+      Turn_order.of_player_names ~first:first_player ~second ~others
+    in
+    Ongoing { deck; player_hands; turn_order; next_step = Draw_or_play }
 ;;
 
-(* TODO-someday: It could be nice if the player wasn't deleted - maybe dead players
-   should be able to see all actions that happen as they spectate. *)
 let eliminate_current_player
-  ({ deck
-   ; player_hands
-   ; current_player = (_ : Player_name.t)
-   ; other_players
-   ; next_step = (_ : Next_step.t)
-   } :
-    Instant.t)
+  ({ deck; player_hands; turn_order; next_step = (_ : Next_step.t) } : Instant.t)
   =
-  match other_players with
-  | [ player ] -> Winner player
-  | current_player :: hd :: tl ->
-    Ongoing
-      { deck
-      ; player_hands
-      ; current_player
-      ; other_players = Nonempty_list.create hd tl
-      ; next_step = Draw_or_play
-      }
+  match Turn_order.eliminate_current_player turn_order with
+  (* TODO-soon: Use [spectators] to broadcast the winner. *)
+  | One_left (winner, _spectators) -> Winner winner
+  | More_than_one_left turn_order ->
+    Ongoing { deck; player_hands; turn_order; next_step = Draw_or_play }
 ;;
 
 (* TODO-someday: If the number of callbacks becomes too high (> 5?), consider linting a
@@ -107,7 +79,7 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
   | Insert_exploding_kitten ->
     let%bind position =
       get_exploding_kitten_insert_position
-        ~player_name:instant.current_player
+        ~player_name:(Turn_order.current_player instant.turn_order)
         ~deck_size:(Deck.size instant.deck)
     in
     let outcome, deck =
@@ -119,22 +91,27 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
        There is also some reduplication here. *)
     let%map () =
       on_outcome
-        ~current_player:instant.current_player
-        ~other_players:(Nonempty_list.to_list instant.other_players)
+        ~current_player:(Turn_order.current_player instant.turn_order)
+        ~waiting_players:(Turn_order.waiting_players instant.turn_order)
         ~outcome
     in
     Ongoing { instant with deck; next_step = Next_step.of_outcome outcome }
   | Draw_or_play ->
     (* This is fine, as [instant.current_player] is a known player. *)
     let hand =
-      Player_hands.hand_exn instant.player_hands ~player_name:instant.current_player
+      Player_hands.hand_exn
+        instant.player_hands
+        ~player_name:(Turn_order.current_player instant.turn_order)
     in
     (* TODO-soon: It might be a good idea to refactor this interaction part
        elsewhere. It detracts from the main purpose of this function. *)
     let%bind outcome, hand, deck =
       Deferred.repeat_until_finished None (fun reprompt_context ->
         let%map action =
-          get_draw_or_play ~player_name:instant.current_player ~hand ~reprompt_context
+          get_draw_or_play
+            ~player_name:(Turn_order.current_player instant.turn_order)
+            ~hand
+            ~reprompt_context
         in
         match
           Action.Draw_or_play.handle
@@ -149,8 +126,8 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
     let instant = Instant.update instant ~deck ~current_player_hand:hand in
     let%map () =
       on_outcome
-        ~current_player:instant.current_player
-        ~other_players:(Nonempty_list.to_list instant.other_players)
+        ~current_player:(Turn_order.current_player instant.turn_order)
+        ~waiting_players:(Turn_order.waiting_players instant.turn_order)
         ~outcome
     in
     Ongoing { instant with next_step = Next_step.of_outcome outcome }

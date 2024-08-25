@@ -3,11 +3,11 @@ open! Async
 open Protocol_lib
 
 (** Sends an RPC to all [Player_name.t]s about the [outcome]. Sensitive data for
-    [other_players] will be redacted. *)
+    [waiting_players] will be redacted. *)
 val broadcast_to_players_exn
   :  Connector.t
   -> current_player:Player_name.t
-  -> other_players:Player_name.t list
+  -> waiting_players:Player_name.t list
   -> outcome:Outcome.t
   -> unit Deferred.t
 

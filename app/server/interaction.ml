@@ -2,7 +2,7 @@ open! Core
 open! Async
 open Protocol_lib
 
-let broadcast_to_players connector ~current_player ~other_players ~outcome =
+let broadcast_to_players connector ~current_player ~waiting_players ~outcome =
   let open Deferred.Or_error.Let_syntax in
   let%bind () =
     Connector.send_message
@@ -12,7 +12,7 @@ let broadcast_to_players connector ~current_player ~other_players ~outcome =
   in
   Deferred.Or_error.List.iter
     ~how:(`Max_concurrent_jobs 16)
-    other_players
+    waiting_players
     ~f:(fun player_name ->
       Connector.send_message
         connector
@@ -20,8 +20,8 @@ let broadcast_to_players connector ~current_player ~other_players ~outcome =
         ~message:(Outcome.to_others_alert outcome ~player_name:current_player))
 ;;
 
-let broadcast_to_players_exn connector ~current_player ~other_players ~outcome =
-  broadcast_to_players connector ~current_player ~other_players ~outcome
+let broadcast_to_players_exn connector ~current_player ~waiting_players ~outcome =
+  broadcast_to_players connector ~current_player ~waiting_players ~outcome
   |> Deferred.Or_error.ok_exn
 ;;
 

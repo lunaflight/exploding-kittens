@@ -14,7 +14,9 @@ let of_connections connections =
         let%map player_name = Rpc.Rpc.dispatch Rpcs.Player_name.rpc connection () in
         player_name, connection)
   in
-  Player_name.Map.of_alist_or_error name_connection_alist |> Deferred.return
+  Player_name.Map.of_alist_or_error name_connection_alist
+  |> Or_error.tag ~tag:"Multiple players have the same name"
+  |> Deferred.return
 ;;
 
 let player_names = Map.keys

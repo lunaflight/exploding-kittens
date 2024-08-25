@@ -2,7 +2,7 @@ open! Core
 open Protocol_lib
 
 let all_mocked_outcomes =
-  Action.Outcome.For_testing.all_mocked
+  Outcome.For_testing.all_mocked
     ~drew_safely:[ Powerless Cattermelon ]
     ~inserted_exploding_kitten:[ 0 ]
     ~saw_the_future:[ [] ]
@@ -11,8 +11,8 @@ let all_mocked_outcomes =
 let print_next_steps_of_outcomes outcomes =
   outcomes
   |> List.iter ~f:(fun outcome ->
-    let next_step = Action.Next_step.of_outcome outcome in
-    print_s [%message (outcome : Action.Outcome.t) (next_step : Action.Next_step.t)])
+    let next_step = Next_step.of_outcome outcome in
+    print_s [%message (outcome : Outcome.t) (next_step : Next_step.t)])
 ;;
 
 let%expect_test "next step of outcomes" =

@@ -1,7 +1,3 @@
-(* TODO-soon: Consider testing this module. The side-effecting interaction
-   is contained in [Connector] and [Player_hands] looks to be able to be made
-   pure and encapsulate all logic. *)
-
 (** This module handles interactions with a game state. [Deferred.t]s are
     returned as RPCs may be called to the clients to, for example, send messages. *)
 
@@ -45,7 +41,7 @@ val start_game
   -> on_outcome:
        (current_player:Player_name.t
         -> other_players:Player_name.t list
-        -> outcome:Action.Outcome.t
+        -> outcome:Outcome.t
         -> unit Deferred.t)
   -> on_win:(player_name:Player_name.t -> message:string -> unit Deferred.t)
   -> unit Or_error.t Deferred.t

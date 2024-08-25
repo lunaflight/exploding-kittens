@@ -8,7 +8,7 @@ val broadcast_to_players_exn
   :  Connector.t
   -> current_player:Player_name.t
   -> other_players:Player_name.t list
-  -> outcome:Action.Outcome.t
+  -> outcome:Outcome.t
   -> unit Deferred.t
 
 (** Sends an RPC to the [player_name] to ask for an [Action.t].

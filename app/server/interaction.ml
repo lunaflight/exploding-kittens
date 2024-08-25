@@ -8,7 +8,7 @@ let broadcast_to_players connector ~current_player ~other_players ~outcome =
     Connector.send_message
       connector
       ~player_name:current_player
-      ~message:(Action.Outcome.to_self_alert outcome)
+      ~message:(Outcome.to_self_alert outcome)
   in
   Deferred.Or_error.List.iter
     ~how:(`Max_concurrent_jobs 16)
@@ -17,7 +17,7 @@ let broadcast_to_players connector ~current_player ~other_players ~outcome =
       Connector.send_message
         connector
         ~player_name
-        ~message:(Action.Outcome.to_others_alert outcome ~player_name:current_player))
+        ~message:(Outcome.to_others_alert outcome ~player_name:current_player))
 ;;
 
 let broadcast_to_players_exn connector ~current_player ~other_players ~outcome =

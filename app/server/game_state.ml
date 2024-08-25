@@ -1,13 +1,13 @@
 open! Core
 open! Async
 open Protocol_lib
-module Next_step = Action.Next_step
 
 module Instant = struct
   type t =
     { deck : Deck.t
     ; player_hands : Player_hands.t
     ; current_player : Player_name.t
+        (* TODO-soon: Add a module that encapsulates turn orders and alive players. *)
     ; other_players : Player_name.t Nonempty_list.t
     ; next_step : Next_step.t
     }
@@ -123,7 +123,7 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
         ~other_players:(Nonempty_list.to_list instant.other_players)
         ~outcome
     in
-    Ongoing { instant with deck; next_step = Action.Next_step.of_outcome outcome }
+    Ongoing { instant with deck; next_step = Next_step.of_outcome outcome }
   | Draw_or_play ->
     (* This is fine, as [instant.current_player] is a known player. *)
     let hand =
@@ -153,7 +153,7 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
         ~other_players:(Nonempty_list.to_list instant.other_players)
         ~outcome
     in
-    Ongoing { instant with next_step = Action.Next_step.of_outcome outcome }
+    Ongoing { instant with next_step = Next_step.of_outcome outcome }
 ;;
 
 let advance_until_win
@@ -198,6 +198,7 @@ let start_game
   in
   match List.permute player_names with
   | [] | [ _ ] ->
+    (* TODO-soon: Add a compile-time guarantee that [connector] has at least 2 players. *)
     Deferred.Or_error.error_s
       [%message "More than 1 player is required to start the game"]
   | first_player :: other_players ->

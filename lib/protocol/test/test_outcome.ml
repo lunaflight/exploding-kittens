@@ -2,7 +2,7 @@ open! Core
 open Protocol_lib
 
 let all_mocked_outcomes =
-  Action.Outcome.For_testing.all_mocked
+  Outcome.For_testing.all_mocked
     ~drew_safely:[ Powerless Cattermelon ]
     ~inserted_exploding_kitten:[ -10; -1; 0; 1; 10 ]
     ~saw_the_future:
@@ -16,11 +16,11 @@ let print_alerts_of_outcomes outcomes ~alert_f =
   outcomes
   |> List.iter ~f:(fun outcome ->
     let alert = alert_f outcome in
-    print_s [%message (outcome : Action.Outcome.t) (alert : string)])
+    print_s [%message (outcome : Outcome.t) (alert : string)])
 ;;
 
 let%expect_test "outcome alerts for self look correct - full feedback is given" =
-  print_alerts_of_outcomes all_mocked_outcomes ~alert_f:Action.Outcome.to_self_alert;
+  print_alerts_of_outcomes all_mocked_outcomes ~alert_f:Outcome.to_self_alert;
   [%expect
     {|
     ((outcome Defused) (alert "You defused an exploding kitten!"))
@@ -53,7 +53,7 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
 let%expect_test "outcome alerts for others look correct - sensitive info is omitted" =
   print_alerts_of_outcomes
     all_mocked_outcomes
-    ~alert_f:(Action.Outcome.to_others_alert ~player_name:(Player_name.of_string "Alice"));
+    ~alert_f:(Outcome.to_others_alert ~player_name:(Player_name.of_string "Alice"));
   [%expect
     {|
     ((outcome Defused) (alert "Alice defused an exploding kitten!"))

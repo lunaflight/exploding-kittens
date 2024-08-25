@@ -5,7 +5,7 @@ let handle_and_print action ~hand ~deck =
   match Action.Draw_or_play.handle action ~hand ~deck ~deterministically:true with
   | Error error -> print_s [%message (error : Error.t)]
   | Ok (outcome, hand, deck) ->
-    print_s [%message (outcome : Action.Outcome.t) (hand : Hand.t) (deck : Deck.t)]
+    print_s [%message (outcome : Outcome.t) (hand : Hand.t) (deck : Deck.t)]
 ;;
 
 let%expect_test "draw from empty deck -> Error" =

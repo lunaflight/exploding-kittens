@@ -1,3 +1,5 @@
+(** TODO-soon: This module should also encapsulate a [Deck.t] as many
+    operations like drawing deal with this as a group and return it as a group. *)
 open! Core
 
 (** This type is an abstraction over a mapping from [Player_name.t] to [Hand.t]. *)

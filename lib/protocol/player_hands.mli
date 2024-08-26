@@ -41,6 +41,9 @@ val add_card : t -> player_name:Player_name.t -> card:Card.t -> t Or_error.t
 (** Returns an error if [player_name] is unknown. *)
 val remove_card : t -> player_name:Player_name.t -> card:Card.t -> t Or_error.t
 
+(** Returns an error if [player_name] is unknown. *)
+val has_card : t -> player_name:Player_name.t -> card:Card.t -> bool Or_error.t
+
 module For_testing : sig
   val of_alist_exn : (Player_name.t * Hand.t) list -> t
 end

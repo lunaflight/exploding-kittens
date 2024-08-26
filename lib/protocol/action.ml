@@ -9,22 +9,36 @@ module Draw_or_play = struct
 
   let of_string t = Or_error.try_with (fun () -> of_string t)
 
-  let handle t ~hand ~deck ~deterministically =
+  let handle t ~player_hands ~player_name ~deck ~deterministically =
     match t with
     | Draw ->
-      let%map.Or_error card, deck = Deck.draw deck in
+      let%bind.Or_error card, deck = Deck.draw deck in
+      let%bind.Or_error player_hands_with_card_added =
+        Player_hands.add_card player_hands ~player_name ~card
+      in
       (match card with
        | Exploding_kitten ->
-         (match Hand.remove_card hand ~card:Defuse with
-          | Error _ -> Outcome.Exploded, Hand.add_card hand ~card, deck
-          | Ok hand -> Outcome.Defused, hand, deck)
-       | _ -> Outcome.Drew_safely card, Hand.add_card hand ~card, deck)
+         (match%bind.Or_error
+            Player_hands.has_card player_hands ~player_name ~card:Defuse
+          with
+          | false ->
+            (Outcome.Exploded, player_hands_with_card_added, deck) |> Or_error.return
+          | true ->
+            let%map.Or_error player_hands =
+              Player_hands.remove_card player_hands ~player_name ~card:Defuse
+            in
+            Outcome.Defused, player_hands, deck)
+       | _ ->
+         (Outcome.Drew_safely card, player_hands_with_card_added, deck) |> Or_error.return)
     | Play power ->
-      let%map.Or_error hand = Hand.remove_card hand ~card:(Power power) in
+      let%map.Or_error player_hands =
+        Player_hands.remove_card player_hands ~player_name ~card:(Power power)
+      in
       (match power with
-       | See_the_future -> Outcome.Saw_the_future (Deck.peek deck ~n:3), hand, deck
-       | Skip -> Outcome.Skipped, hand, deck
-       | Shuffle -> Outcome.Shuffled, hand, Deck.shuffle deck ~deterministically)
+       | See_the_future ->
+         Outcome.Saw_the_future (Deck.peek deck ~n:3), player_hands, deck
+       | Skip -> Outcome.Skipped, player_hands, deck
+       | Shuffle -> Outcome.Shuffled, player_hands, Deck.shuffle deck ~deterministically)
   ;;
 end
 

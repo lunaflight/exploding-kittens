@@ -12,20 +12,11 @@ module Instant = struct
   [@@deriving fields ~getters]
 
   let update
-    { deck = (_ : Deck.t); player_hands; turn_order; next_step }
+    { deck = (_ : Deck.t); player_hands = (_ : Player_hands.t); turn_order; next_step }
     ~deck
-    ~current_player_hand
+    ~player_hands
     =
-    { deck
-    ; player_hands =
-        Player_hands.set_hand_exn
-          player_hands
-          ~player_name:(Turn_order.current_player turn_order)
-          ~hand:current_player_hand
-        (* This is fine, as [current_player] is a known player. *)
-    ; turn_order
-    ; next_step
-    }
+    { deck; player_hands; turn_order; next_step }
   ;;
 
   let pass_turn { deck; player_hands; turn_order; next_step = (_ : Next_step.t) } =
@@ -70,7 +61,13 @@ let eliminate_current_player
 
 (* TODO-someday: If the number of callbacks becomes too high (> 5?), consider linting a
    [Callbacks.t] type. *)
-let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_outcome =
+let advance
+  (instant : Instant.t)
+  ~get_draw_or_play
+  ~get_exploding_kitten_insert_position
+  ~on_outcome
+  =
+  let current_player = Turn_order.current_player instant.turn_order in
   match Instant.next_step instant with
   (* TODO-someday: Eliminating players can be more robust - they need not be at the
      front of the queue. *)
@@ -79,7 +76,7 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
   | Insert_exploding_kitten ->
     let%bind position =
       get_exploding_kitten_insert_position
-        ~player_name:(Turn_order.current_player instant.turn_order)
+        ~player_name:current_player
         ~deck_size:(Deck.size instant.deck)
     in
     let outcome, deck =
@@ -91,21 +88,17 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
        There is also some reduplication here. *)
     let%map () =
       on_outcome
-        ~current_player:(Turn_order.current_player instant.turn_order)
+        ~current_player
         ~waiting_players:(Turn_order.waiting_players instant.turn_order)
         ~outcome
     in
     Ongoing { instant with deck; next_step = Next_step.of_outcome outcome }
   | Draw_or_play ->
     (* This is fine, as [instant.current_player] is a known player. *)
-    let hand =
-      Player_hands.hand_exn
-        instant.player_hands
-        ~player_name:(Turn_order.current_player instant.turn_order)
-    in
+    let hand = Player_hands.hand_exn instant.player_hands ~player_name:current_player in
     (* TODO-soon: It might be a good idea to refactor this interaction part
        elsewhere. It detracts from the main purpose of this function. *)
-    let%bind outcome, hand, deck =
+    let%bind outcome, player_hands, deck =
       Deferred.repeat_until_finished None (fun reprompt_context ->
         let%map action =
           get_draw_or_play
@@ -116,17 +109,18 @@ let advance instant ~get_draw_or_play ~get_exploding_kitten_insert_position ~on_
         match
           Action.Draw_or_play.handle
             action
-            ~hand
+            ~player_hands:instant.player_hands
+            ~player_name:current_player
             ~deck:instant.deck
             ~deterministically:false
         with
         | Error _ -> `Repeat (Some "This action is invalid.")
         | Ok result -> `Finished result)
     in
-    let instant = Instant.update instant ~deck ~current_player_hand:hand in
+    let instant = Instant.update instant ~deck ~player_hands in
     let%map () =
       on_outcome
-        ~current_player:(Turn_order.current_player instant.turn_order)
+        ~current_player
         ~waiting_players:(Turn_order.waiting_players instant.turn_order)
         ~outcome
     in

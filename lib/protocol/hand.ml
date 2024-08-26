@@ -27,3 +27,5 @@ let remove_card t ~card =
     (if new_count = 0 then Map.remove t card else Map.set t ~key:card ~data:new_count)
     |> Or_error.return
 ;;
+
+let contains t ~card = Map.find t card |> Option.is_some

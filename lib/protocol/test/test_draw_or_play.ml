@@ -2,10 +2,20 @@ open! Core
 open Protocol_lib
 
 let handle_and_print action ~hand ~deck =
-  match Action.Draw_or_play.handle action ~hand ~deck ~deterministically:true with
+  let player_under_test = Player_name.of_string "player_under_test" in
+  let player_hands = Player_hands.For_testing.of_alist_exn [ player_under_test, hand ] in
+  match
+    Action.Draw_or_play.handle
+      action
+      ~player_hands
+      ~player_name:player_under_test
+      ~deck
+      ~deterministically:true
+  with
   | Error error -> print_s [%message (error : Error.t)]
-  | Ok (outcome, hand, deck) ->
-    print_s [%message (outcome : Outcome.t) (hand : Hand.t) (deck : Deck.t)]
+  | Ok (outcome, player_hands, deck) ->
+    print_s
+      [%message (outcome : Outcome.t) (player_hands : Player_hands.t) (deck : Deck.t)]
 ;;
 
 let%expect_test "draw from empty deck -> Error" =
@@ -18,7 +28,11 @@ let%expect_test "draw Exploding_kitten without defuse -> Exploded" =
     Draw
     ~hand:(Hand.of_cards [])
     ~deck:(Deck.For_testing.of_card_list [ Exploding_kitten ]);
-  [%expect {| ((outcome Exploded) (hand ((Exploding_kitten 1))) (deck ())) |}]
+  [%expect
+    {|
+    ((outcome Exploded)
+     (player_hands ((player_under_test ((Exploding_kitten 1))))) (deck ()))
+    |}]
 ;;
 
 let%expect_test "draw Exploding_kitten with defuse -> Defused and consumed without \
@@ -28,7 +42,7 @@ let%expect_test "draw Exploding_kitten with defuse -> Defused and consumed witho
     Draw
     ~hand:(Hand.of_cards [ Defuse ])
     ~deck:(Deck.For_testing.of_card_list [ Exploding_kitten ]);
-  [%expect {| ((outcome Defused) (hand ()) (deck ())) |}]
+  [%expect {| ((outcome Defused) (player_hands ((player_under_test ()))) (deck ())) |}]
 ;;
 
 let%expect_test "draw non-Exploding_kitten -> drew successfully" =
@@ -39,7 +53,8 @@ let%expect_test "draw non-Exploding_kitten -> drew successfully" =
   [%expect
     {|
     ((outcome (Drew_safely (Powerless Cattermelon)))
-     (hand (((Powerless Cattermelon) 1))) (deck (Exploding_kitten)))
+     (player_hands ((player_under_test (((Powerless Cattermelon) 1)))))
+     (deck (Exploding_kitten)))
     |}]
 ;;
 
@@ -56,7 +71,11 @@ let%expect_test "play See_the_future with deck of 0 cards -> consumed and 0 seen
     (Play See_the_future)
     ~hand:(Hand.of_cards [ Power See_the_future ])
     ~deck:(Deck.For_testing.of_card_list []);
-  [%expect {| ((outcome (Saw_the_future ())) (hand ()) (deck ())) |}]
+  [%expect
+    {|
+    ((outcome (Saw_the_future ())) (player_hands ((player_under_test ())))
+     (deck ()))
+    |}]
 ;;
 
 let%expect_test "play See_the_future with deck of 1 card -> consumed and 1 seen" =
@@ -66,8 +85,8 @@ let%expect_test "play See_the_future with deck of 1 card -> consumed and 1 seen"
     ~deck:(Deck.For_testing.of_card_list [ Exploding_kitten ]);
   [%expect
     {|
-    ((outcome (Saw_the_future (Exploding_kitten))) (hand ())
-     (deck (Exploding_kitten)))
+    ((outcome (Saw_the_future (Exploding_kitten)))
+     (player_hands ((player_under_test ()))) (deck (Exploding_kitten)))
     |}]
 ;;
 
@@ -89,7 +108,7 @@ let%expect_test "play See_the_future with deck of 4 cards -> consumed and 3 seen
       (Saw_the_future
        ((Powerless Beard_cat) (Powerless Cattermelon)
         (Powerless Rainbow_ralphing_cat))))
-     (hand ())
+     (player_hands ((player_under_test ())))
      (deck
       ((Powerless Beard_cat) (Powerless Cattermelon)
        (Powerless Rainbow_ralphing_cat) (Power Skip))))
@@ -101,7 +120,7 @@ let%expect_test "play Skip -> consumed and no card drawn" =
     (Play Skip)
     ~hand:(Hand.of_cards [ Power Skip ])
     ~deck:(Deck.For_testing.of_card_list []);
-  [%expect {| ((outcome Skipped) (hand ()) (deck ())) |}]
+  [%expect {| ((outcome Skipped) (player_hands ((player_under_test ()))) (deck ())) |}]
 ;;
 
 let%expect_test "play Shuffle -> consumed and deck is shuffled" =
@@ -123,7 +142,7 @@ let%expect_test "play Shuffle -> consumed and deck is shuffled" =
          ]);
   [%expect
     {|
-    ((outcome Shuffled) (hand ())
+    ((outcome Shuffled) (player_hands ((player_under_test ())))
      (deck
       (Defuse (Powerless Cattermelon) (Power Skip) (Power See_the_future)
        (Powerless Tacocat) Exploding_kitten (Powerless Rainbow_ralphing_cat)

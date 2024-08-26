@@ -47,6 +47,11 @@ let remove_card t ~player_name ~card =
   Map.set t ~key:player_name ~data:hand
 ;;
 
+let has_card t ~player_name ~card =
+  let%map.Or_error hand = hand t ~player_name in
+  Hand.contains hand ~card
+;;
+
 module For_testing = struct
   let of_alist_exn = Player_name.Map.of_alist_exn
 end

@@ -91,6 +91,14 @@ let eliminate t ~player_name =
   Map.set t ~key:player_name ~data:Eliminated
 ;;
 
+let to_playing_alist t =
+  Map.to_alist t
+  |> List.filter_map ~f:(fun (player_name, hand_or_eliminated) ->
+    match hand_or_eliminated with
+    | Hand_or_eliminated.Playing hand -> Some (player_name, hand)
+    | Hand_or_eliminated.Eliminated -> None)
+;;
+
 module For_testing = struct
   module Hand_or_eliminated = Hand_or_eliminated
 

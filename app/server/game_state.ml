@@ -122,13 +122,19 @@ let advance
     Ongoing { instant with next_step = Next_step.of_outcome outcome }
 ;;
 
-let advance_until_win
+let start_advancing
   game_state
   ~get_draw_or_play
+  ~on_initial_load
   ~on_outcome
   ~on_win
   ~get_exploding_kitten_insert_position
   =
+  let%bind () =
+    match game_state with
+    | Winner _ -> Deferred.return ()
+    | Ongoing instant -> on_initial_load ~player_hands:instant.player_hands
+  in
   let%bind winner, spectators =
     Deferred.repeat_until_finished game_state (function
       | Winner (player, spectators) -> `Finished (player, spectators) |> return
@@ -149,6 +155,7 @@ let start_game
   ~connector
   ~get_draw_or_play
   ~get_exploding_kitten_insert_position
+  ~on_initial_load
   ~on_outcome
   ~on_win
   =
@@ -168,13 +175,13 @@ let start_game
     Deferred.Or_error.error_s
       [%message "More than 1 player is required to start the game"]
   | first_player :: other_players ->
-    let%bind instant = init ~deck ~first_player ~other_players |> Deferred.return in
-    (* TODO-soon: Everybody should be let known of their starting hand upon load. *)
+    let%bind game_state = init ~deck ~first_player ~other_players |> Deferred.return in
     Monitor.try_with_or_error (fun () ->
-      advance_until_win
-        instant
+      start_advancing
+        game_state
         ~get_draw_or_play
         ~get_exploding_kitten_insert_position
+        ~on_initial_load
         ~on_outcome
         ~on_win)
 ;;

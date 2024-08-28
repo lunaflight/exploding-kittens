@@ -62,6 +62,10 @@ val transfer_random_card
     An error is returned if [player_name] is unknown. *)
 val eliminate : t -> player_name:Player_name.t -> t Or_error.t
 
+(** Returns an association list of all playing [Player_name.t]s with their
+    [Hand.t]s. *)
+val to_playing_alist : t -> (Player_name.t * Hand.t) list
+
 module For_testing : sig
   module Hand_or_eliminated : sig
     type t =

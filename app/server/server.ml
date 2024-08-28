@@ -30,6 +30,7 @@ let command =
            ~get_draw_or_play:(Interaction.get_draw_or_play_exn connector)
            ~get_exploding_kitten_insert_position:
              (Interaction.get_exploding_kitten_insert_position_exn connector)
+           ~on_initial_load:(Interaction.broadcast_dealt_player_hands_exn connector)
            ~on_outcome:(Interaction.broadcast_outcome_to_players_exn connector)
            ~on_win:(Interaction.broadcast_win_exn connector)
          |> Deferred.Or_error.ok_exn)

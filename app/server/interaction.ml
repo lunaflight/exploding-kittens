@@ -50,6 +50,19 @@ let broadcast_win_exn connector ~winner ~spectators =
   broadcast_win connector ~winner ~spectators |> Deferred.Or_error.ok_exn
 ;;
 
+let broadcast_dealt_player_hands connector ~player_hands =
+  Player_hands.to_playing_alist player_hands
+  |> Deferred.Or_error.List.iter ~how:(`Max_concurrent_jobs 16) ~f:(fun (player, hand) ->
+    send_message
+      connector
+      ~players:[ player ]
+      ~message:[%string "You have been dealt the following: %{hand#Hand}."])
+;;
+
+let broadcast_dealt_player_hands_exn connector ~player_hands =
+  broadcast_dealt_player_hands connector ~player_hands |> Deferred.Or_error.ok_exn
+;;
+
 let send_player_if_some connector ~player_name ~message =
   match message with
   | None -> Deferred.Or_error.return ()

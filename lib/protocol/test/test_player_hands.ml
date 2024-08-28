@@ -544,3 +544,16 @@ let%expect_test "eliminate unknown player -> error" =
        ("key not found" unknown_player))))
     |}]
 ;;
+
+let to_playing_alist_and_print player_hands =
+  let alist = Player_hands.to_playing_alist player_hands in
+  print_s [%message (alist : (Player_name.t * Hand.t) list)]
+;;
+
+let%expect_test "alist ignores eliminated players and looks ok" =
+  to_playing_alist_and_print
+    (player_hands_of_alist
+       ~name_and_cards:[ "A", []; "B", [ Power Skip; Defuse ] ]
+       ~eliminated_names:[ "ignored_eliminated_player" ]);
+  [%expect {| (alist ((A ()) (B ((Defuse 1) ((Power Skip) 1))))) |}]
+;;

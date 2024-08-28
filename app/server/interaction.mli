@@ -19,6 +19,13 @@ val broadcast_win_exn
   -> spectators:Player_name.t list
   -> unit Deferred.t
 
+(** Sends an initial message to all playing [Player_name.t]s in
+    [Player_hands.t] after an initial deal via RPC. *)
+val broadcast_dealt_player_hands_exn
+  :  Connector.t
+  -> player_hands:Player_hands.t
+  -> unit Deferred.t
+
 (** Sends an RPC to the [player_name] to ask for an [Action.t].
     No validation for the validity of [Action.t] is done, hence reprompting
     is required and described by [reprompt_context]. *)

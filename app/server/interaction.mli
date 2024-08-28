@@ -5,10 +5,18 @@ open Protocol_lib
 (** Sends a personalised RPC to all [Player_name.t]s about the [outcome].
     [turn_order] will be used to determine the [current_player] and how much
     information each player should be told. *)
-val broadcast_to_players_exn
+val broadcast_outcome_to_players_exn
   :  Connector.t
   -> turn_order:Turn_order.t
   -> outcome:Outcome.t
+  -> unit Deferred.t
+
+(** Sends a message to [winner] and [spectators] about [winner] winning via
+    RPC. *)
+val broadcast_win_exn
+  :  Connector.t
+  -> winner:Player_name.t
+  -> spectators:Player_name.t list
   -> unit Deferred.t
 
 (** Sends an RPC to the [player_name] to ask for an [Action.t].

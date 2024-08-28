@@ -29,12 +29,12 @@ module Instant = struct
 end
 
 type t =
-  | Winner of Player_name.t
+  | Winner of (Player_name.t * Player_name.t list)
   | Ongoing of Instant.t
 
 let init ~deck ~first_player ~other_players =
   match other_players with
-  | [] -> Winner first_player |> Or_error.return
+  | [] -> Winner (first_player, other_players) |> Or_error.return
   | second :: others ->
     let%bind.Or_error deck, player_hands =
       Player_hands.init
@@ -54,8 +54,7 @@ let eliminate_current_player
   =
   let current_player = Turn_order.current_player turn_order in
   match Turn_order.eliminate_current_player turn_order with
-  (* TODO-soon: Use [spectators] to broadcast the winner. *)
-  | One_left (winner, _spectators) -> Winner winner
+  | One_left (winner, spectators) -> Winner (winner, spectators)
   | More_than_one_left turn_order ->
     Ongoing
       { deck
@@ -130,9 +129,9 @@ let advance_until_win
   ~on_win
   ~get_exploding_kitten_insert_position
   =
-  let%bind winner =
+  let%bind winner, spectators =
     Deferred.repeat_until_finished game_state (function
-      | Winner player -> `Finished player |> return
+      | Winner (player, spectators) -> `Finished (player, spectators) |> return
       | Ongoing instant ->
         let%map game_state =
           advance
@@ -143,7 +142,7 @@ let advance_until_win
         in
         `Repeat game_state)
   in
-  on_win ~player_name:winner ~message:"You won!"
+  on_win ~winner ~spectators
 ;;
 
 let start_game

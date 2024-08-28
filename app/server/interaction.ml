@@ -2,32 +2,52 @@ open! Core
 open! Async
 open Protocol_lib
 
-let broadcast_to_players connector ~turn_order ~outcome =
+let send_message connector ~players ~message =
+  Deferred.Or_error.List.iter
+    ~how:(`Max_concurrent_jobs 16)
+    players
+    ~f:(fun player_name -> Connector.send_message connector ~player_name ~message)
+;;
+
+let broadcast_outcome_to_players connector ~turn_order ~outcome =
   let open Deferred.Or_error.Let_syntax in
-  let send_message players ~message =
-    Deferred.Or_error.List.iter
-      ~how:(`Max_concurrent_jobs 16)
-      players
-      ~f:(fun player_name -> Connector.send_message connector ~player_name ~message)
-  in
   let current_player = Turn_order.current_player turn_order in
   let%bind () =
-    send_message [ current_player ] ~message:(Outcome.to_self_alert outcome)
+    send_message
+      connector
+      ~players:[ current_player ]
+      ~message:(Outcome.to_self_alert outcome)
   in
   match Outcome.to_specialised_alert outcome ~player_name:current_player with
   | None ->
     send_message
-      (Turn_order.waiting_players turn_order)
+      connector
+      ~players:(Turn_order.waiting_players turn_order)
       ~message:(Outcome.to_censored_alert outcome ~player_name:current_player)
   | Some (player, alert) ->
-    let%bind () = send_message [ player ] ~message:alert in
+    let%bind () = send_message connector ~players:[ player ] ~message:alert in
     send_message
-      (Turn_order.waiting_players_except turn_order ~blacklist:[ player ])
+      connector
+      ~players:(Turn_order.waiting_players_except turn_order ~blacklist:[ player ])
       ~message:(Outcome.to_censored_alert outcome ~player_name:current_player)
 ;;
 
-let broadcast_to_players_exn connector ~turn_order ~outcome =
-  broadcast_to_players connector ~turn_order ~outcome |> Deferred.Or_error.ok_exn
+let broadcast_outcome_to_players_exn connector ~turn_order ~outcome =
+  broadcast_outcome_to_players connector ~turn_order ~outcome |> Deferred.Or_error.ok_exn
+;;
+
+let broadcast_win connector ~winner ~spectators =
+  Deferred.Or_error.all_unit
+    [ send_message connector ~players:[ winner ] ~message:"You won!"
+    ; send_message
+        connector
+        ~players:spectators
+        ~message:[%string "%{winner#Player_name} won!"]
+    ]
+;;
+
+let broadcast_win_exn connector ~winner ~spectators =
+  broadcast_win connector ~winner ~spectators |> Deferred.Or_error.ok_exn
 ;;
 
 let send_player_if_some connector ~player_name ~message =

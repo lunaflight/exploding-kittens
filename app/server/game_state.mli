@@ -12,7 +12,8 @@ module Instant : sig
 end
 
 type t =
-  | Winner of Player_name.t
+  | Winner of (Player_name.t * Player_name.t list)
+  (** Contains the winner, followed by all other players. *)
   | Ongoing of Instant.t
 
 (** Starts the gameplay loop for the players encapsulated by [connector].
@@ -39,5 +40,5 @@ val start_game
   -> get_exploding_kitten_insert_position:
        (player_name:Player_name.t -> deck_size:int -> int Deferred.t)
   -> on_outcome:(turn_order:Turn_order.t -> outcome:Outcome.t -> unit Deferred.t)
-  -> on_win:(player_name:Player_name.t -> message:string -> unit Deferred.t)
+  -> on_win:(winner:Player_name.t -> spectators:Player_name.t list -> unit Deferred.t)
   -> unit Or_error.t Deferred.t

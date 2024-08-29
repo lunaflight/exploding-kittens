@@ -2,8 +2,8 @@ open! Core
 open Protocol_lib
 
 let create_exn ~player_names ~spectators =
-  let spectators = List.map spectators ~f:Player_name.of_string in
-  match List.map player_names ~f:Player_name.of_string with
+  let spectators = List.map spectators ~f:Player_name.of_string_exn in
+  match List.map player_names ~f:Player_name.of_string_exn with
   | [] | [ _ ] -> raise_s [%message "player_names should be of length >= 2"]
   | current_player :: hd :: tl ->
     Turn_order.For_testing.create
@@ -15,9 +15,9 @@ let create_exn ~player_names ~spectators =
 let of_player_names_and_print ~first ~second ~others =
   let turn_order =
     Turn_order.of_player_names
-      ~first:(Player_name.of_string first)
-      ~second:(Player_name.of_string second)
-      ~others:(List.map others ~f:Player_name.of_string)
+      ~first:(Player_name.of_string_exn first)
+      ~second:(Player_name.of_string_exn second)
+      ~others:(List.map others ~f:Player_name.of_string_exn)
   in
   print_s [%message (turn_order : Turn_order.t Or_error.t)]
 ;;
@@ -134,7 +134,7 @@ let%expect_test "waiting players, B and C, are output" =
 let%expect_test "only C is output" =
   let waiting_players =
     create_exn ~player_names:[ "A"; "B"; "C" ] ~spectators:[ "X"; "Y"; "Z" ]
-    |> Turn_order.waiting_players_except ~blacklist:[ Player_name.of_string "B" ]
+    |> Turn_order.waiting_players_except ~blacklist:[ Player_name.of_string_exn "B" ]
   in
   print_s [%message (waiting_players : Player_name.t list)];
   [%expect {| (waiting_players (C)) |}]

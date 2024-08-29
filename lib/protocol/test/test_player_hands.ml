@@ -7,7 +7,7 @@ let%test_module "init" =
     let init_and_print ~names ~deck ~cards_per_player =
       match
         Player_hands.init
-          ~player_names:(List.map names ~f:Player_name.of_string)
+          ~player_names:(List.map names ~f:Player_name.of_string_exn)
           ~deck
           ~cards_per_player
           ~deterministically:true
@@ -173,18 +173,18 @@ let%test_module "init" =
 
 let player_hands_of_alist ~name_and_cards ~eliminated_names =
   let eliminated_list =
-    List.map eliminated_names ~f:(fun name -> Player_name.of_string name, Eliminated)
+    List.map eliminated_names ~f:(fun name -> Player_name.of_string_exn name, Eliminated)
   in
   let playing_list =
     List.map name_and_cards ~f:(fun (name, cards) ->
-      Player_name.of_string name, Hand.of_cards cards |> Playing)
+      Player_name.of_string_exn name, Hand.of_cards cards |> Playing)
   in
   List.append eliminated_list playing_list |> Player_hands.For_testing.of_alist_exn
 ;;
 
 let add_card_and_print player_hands ~name ~card =
   let player_hands =
-    Player_hands.add_card player_hands ~player_name:(Player_name.of_string name) ~card
+    Player_hands.add_card player_hands ~player_name:(Player_name.of_string_exn name) ~card
   in
   print_s [%message (player_hands : Player_hands.t Or_error.t)]
 ;;
@@ -272,7 +272,7 @@ let remove_card_and_print player_hands ~name ~card ~n =
   let player_hands =
     Player_hands.remove_card
       player_hands
-      ~player_name:(Player_name.of_string name)
+      ~player_name:(Player_name.of_string_exn name)
       ~card
       ~n
   in
@@ -366,7 +366,7 @@ let%expect_test "remove card from eliminated player -> error" =
 
 let set_hand_and_print player_hands ~name ~hand =
   let player_hands =
-    Player_hands.set_hand player_hands ~player_name:(Player_name.of_string name) ~hand
+    Player_hands.set_hand player_hands ~player_name:(Player_name.of_string_exn name) ~hand
   in
   print_s [%message (player_hands : Player_hands.t Or_error.t)]
 ;;
@@ -420,8 +420,8 @@ let transfer_card_and_print player_hands ~receiver ~target =
   match
     Player_hands.transfer_random_card
       player_hands
-      ~receiver:(Player_name.of_string receiver)
-      ~target:(Player_name.of_string target)
+      ~receiver:(Player_name.of_string_exn receiver)
+      ~target:(Player_name.of_string_exn target)
       ~deterministically:true
   with
   | Error error -> print_s [%message (error : Error.t)]
@@ -506,7 +506,7 @@ let%expect_test "target is eliminated -> error" =
 
 let eliminate_and_print player_hands ~name =
   let player_hands =
-    Player_hands.eliminate player_hands ~player_name:(Player_name.of_string name)
+    Player_hands.eliminate player_hands ~player_name:(Player_name.of_string_exn name)
   in
   print_s [%message (player_hands : Player_hands.t Or_error.t)]
 ;;

@@ -4,5 +4,13 @@ open! Core
     is not case-sensitive. *)
 type t [@@deriving bin_io, sexp]
 
-include Stringable.S with type t := t
 include Comparable.S with type t := t
+
+(** An error is returned if the string is empty or contains blacklisted
+    characters.
+
+    See the [.ml] file for more details on blacklisted characters. *)
+val of_string_or_error : string -> t Or_error.t
+
+val of_string_exn : string -> t
+val to_string : t -> string

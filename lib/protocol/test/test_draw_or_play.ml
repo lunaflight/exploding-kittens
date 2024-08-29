@@ -8,11 +8,11 @@ let%expect_test "format doc looks ok" =
 ;;
 
 let handle_and_print action ~hand ~deck ~other_player_and_hands =
-  let player_under_test = Player_name.of_string "player_under_test" in
+  let player_under_test = Player_name.of_string_exn "player_under_test" in
   let player_hands =
     other_player_and_hands
     |> List.map ~f:(fun (player, hand) ->
-      Player_name.of_string player, Hand.of_cards hand |> Playing)
+      Player_name.of_string_exn player, Hand.of_cards hand |> Playing)
     |> List.append [ player_under_test, Hand.of_cards hand |> Playing ]
     |> Player_hands.For_testing.of_alist_exn
   in
@@ -168,7 +168,7 @@ let%expect_test "play Shuffle -> consumed and deck is shuffled" =
 
 let%expect_test "play Double Tacocat -> card stolen from target" =
   handle_and_print
-    (Double (Powerless Tacocat, Player_name.of_string "target"))
+    (Double (Powerless Tacocat, Player_name.of_string_exn "target"))
     ~hand:[ Powerless Tacocat; Powerless Tacocat ]
     ~deck:[]
     ~other_player_and_hands:[ "target", [ Defuse ] ];
@@ -183,7 +183,7 @@ let%expect_test "play Double Tacocat -> card stolen from target" =
 
 let%expect_test "play Double Tacocat with insufficient Tacocats -> error" =
   handle_and_print
-    (Double (Powerless Tacocat, Player_name.of_string "target"))
+    (Double (Powerless Tacocat, Player_name.of_string_exn "target"))
     ~hand:[ Powerless Tacocat ]
     ~deck:[]
     ~other_player_and_hands:[ "target", [ Defuse ] ];
@@ -197,7 +197,7 @@ let%expect_test "play Double Tacocat with insufficient Tacocats -> error" =
 
 let%expect_test "play Double Tacocat to nonexistent player -> error" =
   handle_and_print
-    (Double (Powerless Tacocat, Player_name.of_string "target"))
+    (Double (Powerless Tacocat, Player_name.of_string_exn "target"))
     ~hand:[ Powerless Tacocat; Powerless Tacocat ]
     ~deck:[]
     ~other_player_and_hands:[];
@@ -212,7 +212,7 @@ let%expect_test "play Double Tacocat to nonexistent player -> error" =
 
 let%expect_test "play Double Tacocat to player with no cards -> error" =
   handle_and_print
-    (Double (Powerless Tacocat, Player_name.of_string "target"))
+    (Double (Powerless Tacocat, Player_name.of_string_exn "target"))
     ~hand:[ Powerless Tacocat; Powerless Tacocat ]
     ~deck:[]
     ~other_player_and_hands:[ "target", [] ];

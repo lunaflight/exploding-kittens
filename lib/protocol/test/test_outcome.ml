@@ -10,7 +10,7 @@ let all_mocked_outcomes =
       ; [ Exploding_kitten ]
       ; [ Powerless Tacocat; Power Skip; Power See_the_future ]
       ]
-    ~stole_randomly:[ Powerless Cattermelon, Player_name.of_string "Somebody" ]
+    ~stole_randomly:[ Powerless Cattermelon, Player_name.of_string_exn "Somebody" ]
 ;;
 
 let print_alerts_of_outcomes outcomes ~alert_f =
@@ -56,7 +56,7 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
 let%expect_test "outcome alerts for others look correct - sensitive info is omitted" =
   print_alerts_of_outcomes
     all_mocked_outcomes
-    ~alert_f:(Outcome.to_censored_alert ~player_name:(Player_name.of_string "Alice"));
+    ~alert_f:(Outcome.to_censored_alert ~player_name:(Player_name.of_string_exn "Alice"));
   [%expect
     {|
     ((outcome Defused) (alert "Alice defused an exploding kitten!"))
@@ -101,7 +101,7 @@ let%expect_test "specialised outcome alerts and recipients look correct - full f
   =
   print_specialised_alerts_of_outcomes
     all_mocked_outcomes
-    ~player_name:(Player_name.of_string "Alice");
+    ~player_name:(Player_name.of_string_exn "Alice");
   [%expect
     {|
     ((outcome Defused) "<no specialised alert>")

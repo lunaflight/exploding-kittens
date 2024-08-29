@@ -8,7 +8,7 @@ let action_of_string_and_print string =
 
 let all_mocked_draw_or_plays =
   Action.Draw_or_play.For_testing.all_mocked
-    ~double_target:(Player_name.of_string "Somebody")
+    ~double_target:(Player_name.of_string_exn "Somebody")
 ;;
 
 let print_parse_table ~format_f =
@@ -123,7 +123,7 @@ let%expect_test "unable to parse ill-formed double due to missing string" =
 
 let%expect_test "unable to parse ill-formed double due to missing fields" =
   action_of_string_and_print "double @";
-  [%expect {| (action (Error ("Card.T.of_string: invalid string" (value "")))) |}]
+  [%expect {| (action (Error ("Invalid player name" (string "")))) |}]
 ;;
 
 let%expect_test "unable to parse ill-formed double due to non-card" =

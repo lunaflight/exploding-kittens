@@ -30,8 +30,9 @@ module Draw_or_play = struct
       Regex.capture_groups_exn ~case_sensitive:false ~regex:"double (.*)@(.*)" ~string
     with
     | Some [ card; target ] ->
+      let%bind.Or_error target = Player_name.of_string_or_error target in
       let%map.Or_error card = Card.of_string_or_error card in
-      Double (card, Player_name.of_string target)
+      Double (card, target)
     | _ ->
       (match Regex.capture_groups_exn ~case_sensitive:false ~regex:"draw" ~string with
        | Some _ -> Or_error.return Draw

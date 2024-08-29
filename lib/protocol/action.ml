@@ -26,25 +26,18 @@ module Draw_or_play = struct
   ;;
 
   let of_string string =
-    (* TODO-soon: Use the re2 library
-       [https://ocaml.org/p/re2/latest/doc/Re2/index.html]
-       or some [Scanf] magic to make this more readable
-       and maintainable. *)
-    if String.Caseless.equal string "draw"
-    then Or_error.return Draw
-    else (
-      match String.Caseless.is_prefix string ~prefix:"double " with
-      | true ->
-        let%bind.Or_error card, target =
-          String.Caseless.substr_replace_first string ~pattern:"double " ~with_:""
-          |> String.lsplit2 ~on:'@'
-          |> Or_error.of_option ~error:(Error.of_string "Expected format: card@target")
-        in
-        let%map.Or_error card = Card.of_string_or_error card in
-        Double (card, Player_name.of_string target)
-      | false ->
-        let%map.Or_error power = Card.Power.of_string_or_error string in
-        Play power)
+    match
+      Regex.capture_groups_exn ~case_sensitive:false ~regex:"double (.*)@(.*)" ~string
+    with
+    | Some [ card; target ] ->
+      let%map.Or_error card = Card.of_string_or_error card in
+      Double (card, Player_name.of_string target)
+    | _ ->
+      (match Regex.capture_groups_exn ~case_sensitive:false ~regex:"draw" ~string with
+       | Some _ -> Or_error.return Draw
+       | _ ->
+         let%map.Or_error power = Card.Power.of_string_or_error string in
+         Play power)
   ;;
 
   let handle t ~player_hands ~player_name ~deck ~deterministically =

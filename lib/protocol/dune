@@ -1,6 +1,6 @@
 (library
  (name protocol_lib)
- (libraries async core core_kernel.nonempty_list)
+ (libraries async core core_kernel.nonempty_list regex)
  (inline_tests)
  (preprocess
   (pps ppx_jane)))

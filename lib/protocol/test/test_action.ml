@@ -115,3 +115,18 @@ let%expect_test "unable to parse unknown action" =
      (Error ("Card.Power.of_string: invalid string" (value "unknown action"))))
     |}]
 ;;
+
+let%expect_test "unable to parse ill-formed double due to missing string" =
+  action_of_string_and_print "double";
+  [%expect {| (action (Error ("Card.Power.of_string: invalid string" (value double)))) |}]
+;;
+
+let%expect_test "unable to parse ill-formed double due to missing fields" =
+  action_of_string_and_print "double @";
+  [%expect {| (action (Error ("Card.T.of_string: invalid string" (value "")))) |}]
+;;
+
+let%expect_test "unable to parse ill-formed double due to non-card" =
+  action_of_string_and_print "double noncard@player";
+  [%expect {| (action (Error ("Card.T.of_string: invalid string" (value noncard)))) |}]
+;;

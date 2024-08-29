@@ -1,0 +1,6 @@
+(library
+ (name regex)
+ (libraries async core re2)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane)))

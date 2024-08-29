@@ -1,21 +1,24 @@
-# Using Dune
+# Contributing
+## Inline comments
+This project employs inline comments to express issues.
+- TODO-soon: Refers to issues that are prioritised and should be addressed _soon_.
+- TODO-someday: Refers to non-urgent issues that are nice-to-have and may be addressed _someday_.
 
-You first need OCaml and [Dune](https://dune.build/install) to run this project.
-1. Clone this repository with `git clone`.
-2. Run `dune build` to build the project and install the required dependencies.
+## Commit style
+Each commit represents an atomic change. Every commit should pass all checks
+and build successfully. A commit should not be made just because the codebase
+compiles, but should be made when an objective is fully achieved and addressed.
 
-# How to run
-1. Have a process run `dune exec -- ./bin/player.exe -port YOUR_PORT_HERE -name
-   YOUR_NAME_HERE`, taking note of the host and port that it is running on. A
-   good choice of a port is `8000, 8001, etc`.
-2. Repeat the above process for another player.
-3. Start the server by running a process with `dune exec -- ./bin/server.exe
-   -player HOST:PORT_1 -player HOST:PORT_2`, replacing the host and port
-   appropriately.
+A commit description should also be created to describe what changed in the code
+in detail. It should be written in a way that a person in the future is able to
+answer the following:
+- What was the commit created for?
+- Why was it created?
+- How was it done?
 
-# Commands for development
+## Commands
 - To build the project: `dune build`
 - To run the formatter: `dune fmt`
 - To run tests and accept changes: `dune runtest --auto-promote`
-- To run it while watching changes to the directory, consider running
-`dune build @fmt @runtest --auto-promote --watch`.
+
+All 3 commands should succeed silently on all commits.

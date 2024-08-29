@@ -19,7 +19,7 @@ val of_player_names
   -> t Or_error.t
 
 val current_player : t -> Player_name.t
-val current_and_spectators : t -> Player_name.t list
+val spectators : t -> Player_name.t list
 val players : t -> Player_name.t list
 
 (** Returns [players t] without [current_player t]. *)

@@ -76,6 +76,7 @@ module Draw_or_play = struct
         Player_hands.remove_card player_hands ~player_name ~card ~n:2
       in
       let%map.Or_error card, player_hands =
+        (* TODO-soon: You should not be able to steal from yourself. *)
         Player_hands.transfer_random_card
           player_hands
           ~receiver:player_name

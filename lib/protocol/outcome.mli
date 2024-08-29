@@ -33,6 +33,11 @@ val to_specialised_alert
     Refer to the [.ml] file for what the alert may look like. *)
 val to_censored_alert : t -> player_name:Player_name.t -> string
 
+(** Returns an alert to spectators describing that a player with
+    [player_name] just got an outcome [t].
+    Refer to the [.ml] file for what the alert may look like. *)
+val to_uncensored_alert : t -> player_name:Player_name.t -> string
+
 module For_testing : sig
   val all_mocked
     :  drew_safely:Card.t list

@@ -113,13 +113,13 @@ let%expect_test "current player is the first in list" =
   [%expect {| (current_player A) |}]
 ;;
 
-let%expect_test "current player, A, and spectators are output" =
-  let current_and_spectators =
+let%expect_test "only spectators are output" =
+  let spectators =
     create_exn ~player_names:[ "A"; "B"; "C" ] ~spectators:[ "X"; "Y"; "Z" ]
-    |> Turn_order.current_and_spectators
+    |> Turn_order.spectators
   in
-  print_s [%message (current_and_spectators : Player_name.t list)];
-  [%expect {| (current_and_spectators (A X Y Z)) |}]
+  print_s [%message (spectators : Player_name.t list)];
+  [%expect {| (spectators (X Y Z)) |}]
 ;;
 
 let%expect_test "waiting players, B and C, are output" =

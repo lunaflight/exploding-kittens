@@ -45,10 +45,13 @@ let waiting_players
   Nonempty_list.to_list waiting_players
 ;;
 
-let current_and_spectators
-  { current_player; waiting_players = (_ : Player_name.t Nonempty_list.t); spectators }
+let spectators
+  { current_player = (_ : Player_name.t)
+  ; waiting_players = (_ : Player_name.t Nonempty_list.t)
+  ; spectators
+  }
   =
-  current_player :: spectators
+  spectators
 ;;
 
 let waiting_players_except

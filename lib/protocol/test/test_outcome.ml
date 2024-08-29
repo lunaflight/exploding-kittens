@@ -53,6 +53,44 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
     |}]
 ;;
 
+let%expect_test "outcome alerts for spectators look correct - same as [to_self_alert] \
+                 but with the name changed"
+  =
+  print_alerts_of_outcomes
+    all_mocked_outcomes
+    ~alert_f:
+      (Outcome.to_uncensored_alert ~player_name:(Player_name.of_string_exn "Alice"));
+  [%expect
+    {|
+    ((outcome Defused) (alert "Alice defused an exploding kitten!"))
+    ((outcome (Drew_safely (Powerless Cattermelon)))
+     (alert "Alice drew a(n) Cattermelon."))
+    ((outcome Exploded) (alert "Alice exploded!"))
+    ((outcome (Inserted_exploding_kitten -10))
+     (alert "Alice inserted an exploding kitten at position -10."))
+    ((outcome (Inserted_exploding_kitten -1))
+     (alert "Alice inserted an exploding kitten at position -1."))
+    ((outcome (Inserted_exploding_kitten 0))
+     (alert "Alice inserted an exploding kitten at position 0."))
+    ((outcome (Inserted_exploding_kitten 1))
+     (alert "Alice inserted an exploding kitten at position 1."))
+    ((outcome (Inserted_exploding_kitten 10))
+     (alert "Alice inserted an exploding kitten at position 10."))
+    ((outcome (Saw_the_future ()))
+     (alert "Alice did not see any cards as the deck is empty."))
+    ((outcome (Saw_the_future (Exploding_kitten)))
+     (alert "Alice saw 1 card at the top of the deck: Exploding Kitten."))
+    ((outcome
+      (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
+     (alert
+      "Alice saw 3 cards at the top of the deck: Tacocat, Skip, See The Future."))
+    ((outcome Skipped) (alert "Alice skipped their turn."))
+    ((outcome Shuffled) (alert "Alice shuffled the deck."))
+    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
+     (alert "Alice stole a(n) Cattermelon from Somebody."))
+    |}]
+;;
+
 let%expect_test "outcome alerts for others look correct - sensitive info is omitted" =
   print_alerts_of_outcomes
     all_mocked_outcomes

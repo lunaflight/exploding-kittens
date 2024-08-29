@@ -6,7 +6,8 @@ open! Core
     interacted with. *)
 type t [@@deriving sexp_of]
 
-(** Deals [cards_per_player] cards to each player in [player_names] from [deck].
+(** Deals [cards_per_player] cards to each player in [player_names] from
+    [deck].
     The deck will be shuffled according to [deterministically].
 
     Returns an error if:
@@ -27,7 +28,8 @@ val hand_or_error : t -> player_name:Player_name.t -> Hand.t Or_error.t
 (** See [hand_or_error] for when it will throw an exception. *)
 val hand_exn : t -> player_name:Player_name.t -> Hand.t
 
-(* TODO-soon: After implementing [Steal], [Double] and [Triple], remove what's not needed here. *)
+(* TODO-soon: After implementing [Steal], [Double] and [Triple], remove what's
+   not needed here. *)
 
 (** Sets [player_name]'s hand to [hand].
     Returns an error if [player_name] is unknown or if they are eliminated. *)
@@ -40,7 +42,12 @@ val set_hand_exn : t -> player_name:Player_name.t -> hand:Hand.t -> t
 val add_card : t -> player_name:Player_name.t -> card:Card.t -> t Or_error.t
 
 (** Returns an error if [player_name] is unknown or if they are eliminated. *)
-val remove_card : t -> player_name:Player_name.t -> card:Card.t -> n:int -> t Or_error.t
+val remove_card
+  :  t
+  -> player_name:Player_name.t
+  -> card:Card.t
+  -> n:int
+  -> t Or_error.t
 
 (** Returns an error if [player_name] is unknown or if they are eliminated. *)
 val has_card : t -> player_name:Player_name.t -> card:Card.t -> bool Or_error.t

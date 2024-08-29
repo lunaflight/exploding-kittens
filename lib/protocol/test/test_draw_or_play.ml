@@ -27,7 +27,8 @@ let handle_and_print action ~hand ~deck ~other_player_and_hands =
   | Error error -> print_s [%message (error : Error.t)]
   | Ok (outcome, player_hands, deck) ->
     print_s
-      [%message (outcome : Outcome.t) (player_hands : Player_hands.t) (deck : Deck.t)]
+      [%message
+        (outcome : Outcome.t) (player_hands : Player_hands.t) (deck : Deck.t)]
 ;;
 
 let%expect_test "draw from empty deck -> Error" =
@@ -36,7 +37,11 @@ let%expect_test "draw from empty deck -> Error" =
 ;;
 
 let%expect_test "draw Exploding_kitten without defuse -> Exploded" =
-  handle_and_print Draw ~hand:[] ~deck:[ Exploding_kitten ] ~other_player_and_hands:[];
+  handle_and_print
+    Draw
+    ~hand:[]
+    ~deck:[ Exploding_kitten ]
+    ~other_player_and_hands:[];
   [%expect
     {|
     ((outcome Exploded)
@@ -45,8 +50,8 @@ let%expect_test "draw Exploding_kitten without defuse -> Exploded" =
     |}]
 ;;
 
-let%expect_test "draw Exploding_kitten with defuse -> Defused and consumed without \
-                 holding the exploding kitten"
+let%expect_test "draw Exploding_kitten with defuse -> Defused and consumed \
+                 without holding the exploding kitten"
   =
   handle_and_print
     Draw
@@ -79,7 +84,9 @@ let%expect_test "play Power without owning -> error" =
   [%expect {| (error ("Card is not owned" (t ()) (card (Power Skip)))) |}]
 ;;
 
-let%expect_test "play See_the_future with deck of 0 cards -> consumed and 0 seen" =
+let%expect_test "play See_the_future with deck of 0 cards -> consumed and 0 \
+                 seen"
+  =
   handle_and_print
     (Play See_the_future)
     ~hand:[ Power See_the_future ]
@@ -92,7 +99,8 @@ let%expect_test "play See_the_future with deck of 0 cards -> consumed and 0 seen
     |}]
 ;;
 
-let%expect_test "play See_the_future with deck of 1 card -> consumed and 1 seen" =
+let%expect_test "play See_the_future with deck of 1 card -> consumed and 1 seen"
+  =
   handle_and_print
     (Play See_the_future)
     ~hand:[ Power See_the_future ]
@@ -105,7 +113,8 @@ let%expect_test "play See_the_future with deck of 1 card -> consumed and 1 seen"
     |}]
 ;;
 
-let%expect_test "play See_the_future with deck of 4 cards -> consumed and 3 seen in order"
+let%expect_test "play See_the_future with deck of 4 cards -> consumed and 3 \
+                 seen in order"
   =
   handle_and_print
     (Play See_the_future)
@@ -131,7 +140,11 @@ let%expect_test "play See_the_future with deck of 4 cards -> consumed and 3 seen
 ;;
 
 let%expect_test "play Skip -> consumed and no card drawn" =
-  handle_and_print (Play Skip) ~hand:[ Power Skip ] ~deck:[] ~other_player_and_hands:[];
+  handle_and_print
+    (Play Skip)
+    ~hand:[ Power Skip ]
+    ~deck:[]
+    ~other_player_and_hands:[];
   [%expect
     {|
     ((outcome Skipped) (player_hands ((player_under_test (Playing ()))))

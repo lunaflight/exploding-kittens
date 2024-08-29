@@ -6,7 +6,8 @@ let all_mocked_outcomes =
     ~drew_safely:[ Powerless Cattermelon ]
     ~inserted_exploding_kitten:[ 0 ]
     ~saw_the_future:[ [] ]
-    ~stole_randomly:[ Powerless Cattermelon, Player_name.of_string_exn "Somebody" ]
+    ~stole_randomly:
+      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody" ]
 ;;
 
 let print_next_steps_of_outcomes outcomes =

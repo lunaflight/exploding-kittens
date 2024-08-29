@@ -24,7 +24,10 @@ let%expect_test "2 matches -> matches returned successfully" =
 ;;
 
 let%expect_test "non-matching regex -> None returned" =
-  capture_groups_and_print ~case_sensitive:true ~regex:"fruits (.*) & (.*)" ~string:"";
+  capture_groups_and_print
+    ~case_sensitive:true
+    ~regex:"fruits (.*) & (.*)"
+    ~string:"";
   [%expect {| (result (Ok ())) |}]
 ;;
 
@@ -36,8 +39,8 @@ let%expect_test "differing only by case and case sensitive -> None returned" =
   [%expect {| (result (Ok ())) |}]
 ;;
 
-let%expect_test "differing only by case and case insensitive -> matches returned \
-                 successfully"
+let%expect_test "differing only by case and case insensitive -> matches \
+                 returned successfully"
   =
   capture_groups_and_print
     ~case_sensitive:false
@@ -53,7 +56,9 @@ let%expect_test "regex without capture groups and matches -> Some [] returned \
   [%expect {| (result (Ok (()))) |}]
 ;;
 
-let%expect_test "regex without capture groups and does not match -> None returned" =
+let%expect_test "regex without capture groups and does not match -> None \
+                 returned"
+  =
   capture_groups_and_print
     ~case_sensitive:true
     ~regex:"Fruits?"

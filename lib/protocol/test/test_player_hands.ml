@@ -17,8 +17,8 @@ let%test_module "init" =
         print_s [%message (deck : Deck.t) (player_hands : Player_hands.t)]
     ;;
 
-    let%expect_test "each player has 2 random cards and a defuse, deck has 1 exploding \
-                     kitten"
+    let%expect_test "each player has 2 random cards and a defuse, deck has 1 \
+                     exploding kitten"
       =
       init_and_print
         ~names:[ "A"; "B" ]
@@ -66,7 +66,8 @@ let%test_module "init" =
     |}]
     ;;
 
-    let%expect_test "1 player -> player draws random cards, deck has no exploding kittens"
+    let%expect_test "1 player -> player draws random cards, deck has no \
+                     exploding kittens"
       =
       init_and_print
         ~names:[ "A" ]
@@ -173,18 +174,23 @@ let%test_module "init" =
 
 let player_hands_of_alist ~name_and_cards ~eliminated_names =
   let eliminated_list =
-    List.map eliminated_names ~f:(fun name -> Player_name.of_string_exn name, Eliminated)
+    List.map eliminated_names ~f:(fun name ->
+      Player_name.of_string_exn name, Eliminated)
   in
   let playing_list =
     List.map name_and_cards ~f:(fun (name, cards) ->
       Player_name.of_string_exn name, Hand.of_cards cards |> Playing)
   in
-  List.append eliminated_list playing_list |> Player_hands.For_testing.of_alist_exn
+  List.append eliminated_list playing_list
+  |> Player_hands.For_testing.of_alist_exn
 ;;
 
 let add_card_and_print player_hands ~name ~card =
   let player_hands =
-    Player_hands.add_card player_hands ~player_name:(Player_name.of_string_exn name) ~card
+    Player_hands.add_card
+      player_hands
+      ~player_name:(Player_name.of_string_exn name)
+      ~card
   in
   print_s [%message (player_hands : Player_hands.t Or_error.t)]
 ;;
@@ -287,7 +293,8 @@ let%expect_test "remove defuse from A -> ok" =
     ~name:"A"
     ~card:Defuse
     ~n:1;
-  [%expect {| (player_hands (Ok ((A (Playing ())) (B (Playing (((Power Skip) 1))))))) |}]
+  [%expect
+    {| (player_hands (Ok ((A (Playing ())) (B (Playing (((Power Skip) 1))))))) |}]
 ;;
 
 let%expect_test "remove multiple defuses from A -> ok" =
@@ -298,7 +305,8 @@ let%expect_test "remove multiple defuses from A -> ok" =
     ~name:"A"
     ~card:Defuse
     ~n:3;
-  [%expect {| (player_hands (Ok ((A (Playing ())) (B (Playing (((Power Skip) 1))))))) |}]
+  [%expect
+    {| (player_hands (Ok ((A (Playing ())) (B (Playing (((Power Skip) 1))))))) |}]
 ;;
 
 let%expect_test "remove unowned card from A -> error" =
@@ -366,7 +374,10 @@ let%expect_test "remove card from eliminated player -> error" =
 
 let set_hand_and_print player_hands ~name ~hand =
   let player_hands =
-    Player_hands.set_hand player_hands ~player_name:(Player_name.of_string_exn name) ~hand
+    Player_hands.set_hand
+      player_hands
+      ~player_name:(Player_name.of_string_exn name)
+      ~hand
   in
   print_s [%message (player_hands : Player_hands.t Or_error.t)]
 ;;
@@ -498,7 +509,9 @@ let%expect_test "receiver is eliminated -> error" =
 
 let%expect_test "target is eliminated -> error" =
   transfer_card_and_print
-    (player_hands_of_alist ~name_and_cards:[ "A", [ Defuse ] ] ~eliminated_names:[ "B" ])
+    (player_hands_of_alist
+       ~name_and_cards:[ "A", [ Defuse ] ]
+       ~eliminated_names:[ "B" ])
     ~receiver:"A"
     ~target:"B";
   [%expect {| (error ("Player is eliminated" (player_name B))) |}]
@@ -506,7 +519,9 @@ let%expect_test "target is eliminated -> error" =
 
 let eliminate_and_print player_hands ~name =
   let player_hands =
-    Player_hands.eliminate player_hands ~player_name:(Player_name.of_string_exn name)
+    Player_hands.eliminate
+      player_hands
+      ~player_name:(Player_name.of_string_exn name)
   in
   print_s [%message (player_hands : Player_hands.t Or_error.t)]
 ;;
@@ -517,7 +532,8 @@ let%expect_test "eliminate playing A -> ok" =
        ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
        ~eliminated_names:[])
     ~name:"A";
-  [%expect {| (player_hands (Ok ((A Eliminated) (B (Playing (((Power Skip) 1))))))) |}]
+  [%expect
+    {| (player_hands (Ok ((A Eliminated) (B (Playing (((Power Skip) 1))))))) |}]
 ;;
 
 let%expect_test "eliminate eliminated A -> ok, nothing happens" =
@@ -526,7 +542,8 @@ let%expect_test "eliminate eliminated A -> ok, nothing happens" =
        ~name_and_cards:[ "B", [ Power Skip ] ]
        ~eliminated_names:[ "A" ])
     ~name:"A";
-  [%expect {| (player_hands (Ok ((A Eliminated) (B (Playing (((Power Skip) 1))))))) |}]
+  [%expect
+    {| (player_hands (Ok ((A Eliminated) (B (Playing (((Power Skip) 1))))))) |}]
 ;;
 
 let%expect_test "eliminate unknown player -> error" =

@@ -17,7 +17,8 @@ module Without_exploding_kittens = struct
   let default ~player_cnt ~shuffled =
     let init_with_counts ~count_of_card =
       Card.all
-      |> List.map ~f:(fun card -> List.init (count_of_card card) ~f:(fun _i -> card))
+      |> List.map ~f:(fun card ->
+        List.init (count_of_card card) ~f:(fun _i -> card))
       |> List.concat
     in
     if player_cnt < 2 || player_cnt > 5
@@ -45,7 +46,9 @@ module Without_exploding_kittens = struct
     then
       Or_error.error_s
         [%message
-          "Attempting to draw invalid number of cards" (n : int) (List.length t : int)]
+          "Attempting to draw invalid number of cards"
+            (n : int)
+            (List.length t : int)]
     else (
       let cards, deck = List.split_n t n in
       (Hand.of_cards cards, deck) |> Or_error.return)
@@ -58,7 +61,9 @@ end
 
 let add_exploding_kittens t ~player_cnt ~deterministically =
   if player_cnt < 1
-  then Or_error.error_s [%message "There should be at least 1 player" (player_cnt : int)]
+  then
+    Or_error.error_s
+      [%message "There should be at least 1 player" (player_cnt : int)]
   else
     t @ List.init (player_cnt - 1) ~f:(fun _i -> Card.Exploding_kitten)
     |> shuffle ~deterministically
@@ -75,7 +80,9 @@ let peek t ~n = List.take t n
 
 let insert t ~card ~position =
   let top, bottom =
-    List.split_n t (if position >= 0 then position else List.length t + 1 + position)
+    List.split_n
+      t
+      (if position >= 0 then position else List.length t + 1 + position)
   in
   top @ [ card ] @ bottom
 ;;

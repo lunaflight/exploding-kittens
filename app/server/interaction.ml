@@ -50,22 +50,32 @@ let broadcast_outcome_to_players connector ~turn_order ~outcome =
       ~ignore_errors:false
   | Some (player, alert) ->
     let%bind () =
-      send_message connector ~players:[ player ] ~message:alert ~ignore_errors:false
+      send_message
+        connector
+        ~players:[ player ]
+        ~message:alert
+        ~ignore_errors:false
     in
     send_message
       connector
-      ~players:(Turn_order.waiting_players_except turn_order ~blacklist:[ player ])
+      ~players:
+        (Turn_order.waiting_players_except turn_order ~blacklist:[ player ])
       ~message:(Outcome.to_censored_alert outcome ~player_name:current_player)
       ~ignore_errors:false
 ;;
 
 let broadcast_outcome_to_players_exn connector ~turn_order ~outcome =
-  broadcast_outcome_to_players connector ~turn_order ~outcome |> Deferred.Or_error.ok_exn
+  broadcast_outcome_to_players connector ~turn_order ~outcome
+  |> Deferred.Or_error.ok_exn
 ;;
 
 let broadcast_win connector ~winner ~spectators =
   Deferred.Or_error.all_unit
-    [ send_message connector ~players:[ winner ] ~message:"You won!" ~ignore_errors:false
+    [ send_message
+        connector
+        ~players:[ winner ]
+        ~message:"You won!"
+        ~ignore_errors:false
     ; send_message
         connector
         ~players:spectators
@@ -80,16 +90,19 @@ let broadcast_win_exn connector ~winner ~spectators =
 
 let broadcast_dealt_player_hands connector ~player_hands =
   Player_hands.to_playing_alist player_hands
-  |> Deferred.Or_error.List.iter ~how:(`Max_concurrent_jobs 16) ~f:(fun (player, hand) ->
-    send_message
-      connector
-      ~players:[ player ]
-      ~message:[%string "You have been dealt the following: %{hand#Hand}."]
-      ~ignore_errors:false)
+  |> Deferred.Or_error.List.iter
+       ~how:(`Max_concurrent_jobs 16)
+       ~f:(fun (player, hand) ->
+         send_message
+           connector
+           ~players:[ player ]
+           ~message:[%string "You have been dealt the following: %{hand#Hand}."]
+           ~ignore_errors:false)
 ;;
 
 let broadcast_dealt_player_hands_exn connector ~player_hands =
-  broadcast_dealt_player_hands connector ~player_hands |> Deferred.Or_error.ok_exn
+  broadcast_dealt_player_hands connector ~player_hands
+  |> Deferred.Or_error.ok_exn
 ;;
 
 let send_player_if_some connector ~player_name ~message =
@@ -100,7 +113,9 @@ let send_player_if_some connector ~player_name ~message =
 
 let get_draw_or_play connector ~player_name ~hand ~reprompt_context =
   let open Deferred.Or_error.Let_syntax in
-  let%bind () = send_player_if_some connector ~player_name ~message:reprompt_context in
+  let%bind () =
+    send_player_if_some connector ~player_name ~message:reprompt_context
+  in
   Connector.get_draw_or_play connector ~player_name ~hand
 ;;
 
@@ -110,7 +125,10 @@ let get_draw_or_play_exn connector ~player_name ~hand ~reprompt_context =
 ;;
 
 let get_exploding_kitten_insert_position connector ~player_name ~deck_size =
-  Connector.get_exploding_kitten_insert_position connector ~player_name ~deck_size
+  Connector.get_exploding_kitten_insert_position
+    connector
+    ~player_name
+    ~deck_size
 ;;
 
 let get_exploding_kitten_insert_position_exn connector ~player_name ~deck_size =

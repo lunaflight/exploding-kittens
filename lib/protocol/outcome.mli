@@ -17,8 +17,10 @@ type t =
     Refer to the [.ml] file for what the alert may look like. *)
 val to_self_alert : t -> string
 
-(** Returns the specialised alert along with the player it is meant for, if it exists.
-    It describes that another player with [player_name] just got an outcome [t].
+(** Returns the specialised alert along with the player it is meant for, if it
+    exists.
+    It describes that another player with [player_name] just got an outcome
+    [t].
 
     An example is if [t] is [Stole_randomly] - the [target] deserves a special
     message.

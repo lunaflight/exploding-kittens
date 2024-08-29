@@ -19,13 +19,15 @@ let get_input ~prompt =
 
 let get ~prelude ~prompt ~input_hint ~of_string_or_error =
   Writer.write_line stdout prelude;
-  Deferred.repeat_until_finished [%string "%{prompt} [%{input_hint}]: "] (fun prompt ->
-    let%map input = get_input ~prompt in
-    match of_string_or_error input with
-    | Error _ ->
-      Writer.write stdout "Couldn't parse; ";
-      `Repeat prompt
-    | Ok result -> `Finished result)
+  Deferred.repeat_until_finished
+    [%string "%{prompt} [%{input_hint}]: "]
+    (fun prompt ->
+       let%map input = get_input ~prompt in
+       match of_string_or_error input with
+       | Error _ ->
+         Writer.write stdout "Couldn't parse; ";
+         `Repeat prompt
+       | Ok result -> `Finished result)
 ;;
 
 let get_draw_or_play ~hand =
@@ -37,7 +39,8 @@ let get_draw_or_play ~hand =
     ~of_string_or_error:Action.Draw_or_play.of_string
 ;;
 
-(* TODO-soon: Provide a better interface than just a mysterous int as a postion. *)
+(* TODO-soon: Provide a better interface than just a mysterous int as a
+   position. *)
 let get_exploding_kitten_insert_position ~deck_size =
   let lowest_pos = -deck_size - 1 in
   let highest_pos = deck_size in
@@ -48,5 +51,7 @@ let get_exploding_kitten_insert_position ~deck_size =
     ~of_string_or_error:(fun string ->
       Int.of_string_opt string
       |> Or_error.of_option
-           ~error:(Error.create_s [%message "Could not parse as int" (string : string)]))
+           ~error:
+             (Error.create_s
+                [%message "Could not parse as int" (string : string)]))
 ;;

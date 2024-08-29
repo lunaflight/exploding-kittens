@@ -2,7 +2,8 @@ open! Core
 open! Async
 open Protocol_lib
 
-(** This type is an abstraction over being able to send RPCs using [Player_name]. *)
+(** This type is an abstraction over being able to send RPCs using
+    [Player_name]. *)
 type t
 
 (** Initialises [t] after sending an RPC to get their player names.
@@ -12,8 +13,8 @@ val of_connections : Rpc.Connection.t list -> t Or_error.t Deferred.t
 (** Returns all known player names in [t]. *)
 val player_names : t -> Player_name.t list
 
-(** Asks the player to provide a draw or play action via RPC. This action may or
-    may not be valid depending on the game state. *)
+(** Asks the player to provide a draw or play action via RPC. This action may
+    or may not be valid depending on the game state. *)
 val get_draw_or_play
   :  t
   -> player_name:Player_name.t

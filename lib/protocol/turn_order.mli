@@ -2,7 +2,8 @@ open! Core
 
 (** This is an abstraction over a turn order of players. It also remembers
     spectators which includes eliminated players.
-    It is asserted at compile-time that there is at least 2 players playing. *)
+    It is asserted at compile-time that there is at least 2 players
+    playing. *)
 type t [@@deriving sexp_of]
 
 (** Initialises [t] with the given [Player_name.t]s. All players start off
@@ -26,7 +27,10 @@ val players : t -> Player_name.t list
 val waiting_players : t -> Player_name.t list
 
 (** Returns [waiting_players] without any player in [blacklist]. *)
-val waiting_players_except : t -> blacklist:Player_name.t list -> Player_name.t list
+val waiting_players_except
+  :  t
+  -> blacklist:Player_name.t list
+  -> Player_name.t list
 
 (** Moves the [current_player] to the end of the queue, promoting the next
     waiting player to be the [current_player]. *)

@@ -21,10 +21,15 @@ let init ~player_names ~deck ~cards_per_player ~deterministically =
           ( deck
           , (name, Hand_or_eliminated.Playing (Hand.add_card ~card:Defuse hand))
             |> Or_error.return )
-        | Error _ as err -> deck, Or_error.tag err ~tag:"Deck is not sufficiently large")
+        | Error _ as err ->
+          deck, Or_error.tag err ~tag:"Deck is not sufficiently large")
   in
-  let%bind.Or_error player_name_and_hands = Or_error.all player_name_and_hands in
-  let%bind.Or_error t = Player_name.Map.of_alist_or_error player_name_and_hands in
+  let%bind.Or_error player_name_and_hands =
+    Or_error.all player_name_and_hands
+  in
+  let%bind.Or_error t =
+    Player_name.Map.of_alist_or_error player_name_and_hands
+  in
   let%map.Or_error deck =
     Deck.add_exploding_kittens
       deck
@@ -38,13 +43,16 @@ let init ~player_names ~deck ~cards_per_player ~deterministically =
 let find_or_error t ~player_name =
   Map.find_or_error t player_name
   |> Or_error.tag_s
-       ~tag:[%message "Could not find player name" (player_name : Player_name.t) (t : t)]
+       ~tag:
+         [%message
+           "Could not find player name" (player_name : Player_name.t) (t : t)]
 ;;
 
 let hand_or_error t ~player_name =
   match%bind.Or_error find_or_error t ~player_name with
   | Eliminated ->
-    Or_error.error_s [%message "Player is eliminated" (player_name : Player_name.t)]
+    Or_error.error_s
+      [%message "Player is eliminated" (player_name : Player_name.t)]
   | Playing hand -> Or_error.return hand
 ;;
 
@@ -55,7 +63,9 @@ let set_hand t ~player_name ~hand =
   Map.set t ~key:player_name ~data:(Playing hand)
 ;;
 
-let set_hand_exn t ~player_name ~hand = set_hand t ~player_name ~hand |> Or_error.ok_exn
+let set_hand_exn t ~player_name ~hand =
+  set_hand t ~player_name ~hand |> Or_error.ok_exn
+;;
 
 let add_card t ~player_name ~card =
   let%map.Or_error hand = hand_or_error t ~player_name in
@@ -79,7 +89,8 @@ let transfer_random_card t ~receiver ~target ~deterministically =
     Hand.random_card target_hand ~deterministically
     |> Or_error.of_option
          ~error:
-           (Error.create_s [%message "Target has an empty hand" (target : Player_name.t)])
+           (Error.create_s
+              [%message "Target has an empty hand" (target : Player_name.t)])
   in
   let%bind.Or_error t = remove_card t ~player_name:target ~card ~n:1 in
   let%map.Or_error t = add_card t ~player_name:receiver ~card in

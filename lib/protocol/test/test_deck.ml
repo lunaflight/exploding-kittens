@@ -46,7 +46,8 @@ let%expect_test "inserting into a deck at position 1 makes it 2nd" =
   [%expect {| (deck (Defuse (Powerless Tacocat) Defuse Defuse)) |}]
 ;;
 
-let%expect_test "inserting into a deck at large positive position makes it last" =
+let%expect_test "inserting into a deck at large positive position makes it last"
+  =
   insert_and_print
     ~card:(Powerless Tacocat)
     ~deck:(Deck.For_testing.of_card_list [ Defuse; Defuse; Defuse ])
@@ -70,7 +71,9 @@ let%expect_test "inserting into a deck at position -2 makes it 2nd last" =
   [%expect {| (deck (Defuse Defuse (Powerless Tacocat) Defuse)) |}]
 ;;
 
-let%expect_test "inserting into a deck at large negative position makes it first" =
+let%expect_test "inserting into a deck at large negative position makes it \
+                 first"
+  =
   insert_and_print
     ~card:(Powerless Tacocat)
     ~deck:(Deck.For_testing.of_card_list [ Defuse; Defuse; Defuse ])
@@ -79,7 +82,9 @@ let%expect_test "inserting into a deck at large negative position makes it first
 ;;
 
 let add_exploding_kittens_and_print ~deck ~player_cnt =
-  let deck = Deck.add_exploding_kittens deck ~player_cnt ~deterministically:true in
+  let deck =
+    Deck.add_exploding_kittens deck ~player_cnt ~deterministically:true
+  in
   print_s [%message (deck : Deck.t Or_error.t)]
 ;;
 
@@ -87,7 +92,8 @@ let%expect_test "add_exploding_kittens with 0 players -> error" =
   add_exploding_kittens_and_print
     ~deck:(Deck.Without_exploding_kittens.For_testing.of_card_list [])
     ~player_cnt:0;
-  [%expect {| (deck (Error ("There should be at least 1 player" (player_cnt 0)))) |}]
+  [%expect
+    {| (deck (Error ("There should be at least 1 player" (player_cnt 0)))) |}]
 ;;
 
 let%expect_test "add_exploding_kittens with 1 player -> 0 added and shuffled" =
@@ -154,7 +160,9 @@ let%expect_test "add_exploding_kittens with 6 players -> 5 added and shuffled" =
 ;;
 
 let default_and_print ~player_cnt =
-  let deck = Deck.Without_exploding_kittens.default ~player_cnt ~shuffled:false in
+  let deck =
+    Deck.Without_exploding_kittens.default ~player_cnt ~shuffled:false
+  in
   print_s [%message (deck : Deck.Without_exploding_kittens.t Or_error.t)]
 ;;
 
@@ -256,7 +264,8 @@ let%expect_test "deal 2 cards from non-empty deck -> hand and deck look right" =
     |}]
 ;;
 
-let%expect_test "deal all cards from non-empty deck -> hand and deck look right" =
+let%expect_test "deal all cards from non-empty deck -> hand and deck look right"
+  =
   deal_and_print
     ~deck:
       (Deck.Without_exploding_kittens.For_testing.of_card_list
@@ -295,12 +304,16 @@ let%expect_test "deal cards more than deck size -> error" =
 ;;
 
 let%expect_test "deal 0 cards from empty deck -> ok" =
-  deal_and_print ~deck:(Deck.Without_exploding_kittens.For_testing.of_card_list []) ~n:0;
+  deal_and_print
+    ~deck:(Deck.Without_exploding_kittens.For_testing.of_card_list [])
+    ~n:0;
   [%expect {| ((hand ()) (deck ())) |}]
 ;;
 
 let%expect_test "deal 1 card from empty deck -> error" =
-  deal_and_print ~deck:(Deck.Without_exploding_kittens.For_testing.of_card_list []) ~n:1;
+  deal_and_print
+    ~deck:(Deck.Without_exploding_kittens.For_testing.of_card_list [])
+    ~n:1;
   [%expect
     {|
     (error

@@ -22,19 +22,25 @@ module Draw_or_play = struct
   let to_string = function
     | Draw -> "Draw"
     | Play power -> Card.Power.to_string power
-    | Double (card, target) -> [%string "Double %{card#Card}@%{target#Player_name}"]
+    | Double (card, target) ->
+      [%string "Double %{card#Card}@%{target#Player_name}"]
   ;;
 
   let of_string string =
     match
-      Regex.capture_groups_exn ~case_sensitive:false ~regex:"double (.*)@(.*)" ~string
+      Regex.capture_groups_exn
+        ~case_sensitive:false
+        ~regex:"double (.*)@(.*)"
+        ~string
     with
     | Some [ card; target ] ->
       let%bind.Or_error target = Player_name.of_string_or_error target in
       let%map.Or_error card = Card.of_string_or_error card in
       Double (card, target)
     | _ ->
-      (match Regex.capture_groups_exn ~case_sensitive:false ~regex:"draw" ~string with
+      (match
+         Regex.capture_groups_exn ~case_sensitive:false ~regex:"draw" ~string
+       with
        | Some _ -> Or_error.return Draw
        | _ ->
          let%map.Or_error power = Card.Power.of_string_or_error string in
@@ -54,23 +60,34 @@ module Draw_or_play = struct
             Player_hands.has_card player_hands ~player_name ~card:Defuse
           with
           | false ->
-            (Outcome.Exploded, player_hands_with_card_added, deck) |> Or_error.return
+            (Outcome.Exploded, player_hands_with_card_added, deck)
+            |> Or_error.return
           | true ->
             let%map.Or_error player_hands =
-              Player_hands.remove_card player_hands ~player_name ~card:Defuse ~n:1
+              Player_hands.remove_card
+                player_hands
+                ~player_name
+                ~card:Defuse
+                ~n:1
             in
             Outcome.Defused, player_hands, deck)
        | _ ->
-         (Outcome.Drew_safely card, player_hands_with_card_added, deck) |> Or_error.return)
+         (Outcome.Drew_safely card, player_hands_with_card_added, deck)
+         |> Or_error.return)
     | Play power ->
       let%map.Or_error player_hands =
-        Player_hands.remove_card player_hands ~player_name ~card:(Power power) ~n:1
+        Player_hands.remove_card
+          player_hands
+          ~player_name
+          ~card:(Power power)
+          ~n:1
       in
       (match power with
        | See_the_future ->
          Outcome.Saw_the_future (Deck.peek deck ~n:3), player_hands, deck
        | Skip -> Outcome.Skipped, player_hands, deck
-       | Shuffle -> Outcome.Shuffled, player_hands, Deck.shuffle deck ~deterministically)
+       | Shuffle ->
+         Outcome.Shuffled, player_hands, Deck.shuffle deck ~deterministically)
     | Double (card, target) ->
       let%bind.Or_error player_hands =
         Player_hands.remove_card player_hands ~player_name ~card ~n:2
@@ -91,7 +108,8 @@ module Draw_or_play = struct
       Variants.fold
         ~init:[]
         ~draw:(fun acc v -> acc @ [ v.constructor ])
-        ~play:(fun acc v -> List.map Card.Power.all ~f:v.constructor |> List.append acc)
+        ~play:(fun acc v ->
+          List.map Card.Power.all ~f:v.constructor |> List.append acc)
         ~double:(fun acc v ->
           Card.all
           |> List.map ~f:(fun power -> power, double_target)

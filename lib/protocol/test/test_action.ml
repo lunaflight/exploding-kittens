@@ -19,17 +19,21 @@ let print_parse_table ~format_f =
     | Play See_the_future -> "see the future"
     | Play Skip -> "skip"
     | Play Shuffle -> "shuffle"
-    | Double (card, target) -> [%string "double %{card#Card}@%{target#Player_name}"]
+    | Double (card, target) ->
+      [%string "double %{card#Card}@%{target#Player_name}"]
   in
   let parse_table =
     all_mocked_draw_or_plays
     |> List.map ~f:(fun action ->
       let expected_string = action |> expected_string_of_action |> format_f in
-      let%map.Or_error action = expected_string |> Action.Draw_or_play.of_string in
+      let%map.Or_error action =
+        expected_string |> Action.Draw_or_play.of_string
+      in
       expected_string, action)
     |> Or_error.all
   in
-  print_s [%message (parse_table : (string * Action.Draw_or_play.t) list Or_error.t)]
+  print_s
+    [%message (parse_table : (string * Action.Draw_or_play.t) list Or_error.t)]
 ;;
 
 let%expect_test "able to parse all lowercase" =
@@ -118,7 +122,8 @@ let%expect_test "unable to parse unknown action" =
 
 let%expect_test "unable to parse ill-formed double due to missing string" =
   action_of_string_and_print "double";
-  [%expect {| (action (Error ("Card.Power.of_string: invalid string" (value double)))) |}]
+  [%expect
+    {| (action (Error ("Card.Power.of_string: invalid string" (value double)))) |}]
 ;;
 
 let%expect_test "unable to parse ill-formed double due to missing fields" =
@@ -128,5 +133,6 @@ let%expect_test "unable to parse ill-formed double due to missing fields" =
 
 let%expect_test "unable to parse ill-formed double due to non-card" =
   action_of_string_and_print "double noncard@player";
-  [%expect {| (action (Error ("Card.T.of_string: invalid string" (value noncard)))) |}]
+  [%expect
+    {| (action (Error ("Card.T.of_string: invalid string" (value noncard)))) |}]
 ;;

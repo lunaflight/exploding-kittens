@@ -2,7 +2,9 @@ open! Core
 
 let capture_groups ~case_sensitive ~regex ~string =
   let%map.Or_error re =
-    Re2.create ~options:{ Re2.Options.default with case_sensitive } [%string "^%{regex}$"]
+    Re2.create
+      ~options:{ Re2.Options.default with case_sensitive }
+      [%string "^%{regex}$"]
   in
   match Re2.find_submatches re string with
   | Error _error -> None

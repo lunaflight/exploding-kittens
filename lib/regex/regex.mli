@@ -1,6 +1,7 @@
 open! Core
 
-(** Returns a list of all the capture groups that [string] matches against [regex].
+(** Returns a list of all the capture groups that [string] matches against
+    [regex].
     An error is returned if the [regex] is ill-formed.
     None is returned if [string] does not match [regex].
     Some [ capture_group_1; capture_group_2; ... ] is returned if it matches

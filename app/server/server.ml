@@ -15,12 +15,17 @@ let command =
        | [] | [ _ ] ->
          raise_s
            [%message
-             "incorrect number of players specified" (player : Host_and_port.t list)]
+             "incorrect number of players specified"
+               (player : Host_and_port.t list)]
        | players ->
          let%bind connections =
-           Deferred.List.map ~how:(`Max_concurrent_jobs 16) players ~f:(fun player ->
-             Rpc.Connection.client (Tcp.Where_to_connect.of_host_and_port player)
-             >>| Result.ok_exn)
+           Deferred.List.map
+             ~how:(`Max_concurrent_jobs 16)
+             players
+             ~f:(fun player ->
+               Rpc.Connection.client
+                 (Tcp.Where_to_connect.of_host_and_port player)
+               >>| Result.ok_exn)
          in
          let%bind connector =
            Connector.of_connections connections |> Deferred.Or_error.ok_exn
@@ -30,7 +35,8 @@ let command =
            ~get_draw_or_play:(Interaction.get_draw_or_play_exn connector)
            ~get_exploding_kitten_insert_position:
              (Interaction.get_exploding_kitten_insert_position_exn connector)
-           ~on_initial_load:(Interaction.broadcast_dealt_player_hands_exn connector)
+           ~on_initial_load:
+             (Interaction.broadcast_dealt_player_hands_exn connector)
            ~on_outcome:(Interaction.broadcast_outcome_to_players_exn connector)
            ~on_win:(Interaction.broadcast_win_exn connector)
          |> Deferred.Or_error.ok_exn)

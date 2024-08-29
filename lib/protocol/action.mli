@@ -24,7 +24,8 @@ module Draw_or_play : sig
     -> deterministically:bool
     -> (Outcome.t * Player_hands.t * Deck.t) Or_error.t
 
-  (* TODO-someday: Accomodate shortened forms or unique prefixes of an action. *)
+  (* TODO-someday: Accomodate shortened forms or unique prefixes of an
+     action. *)
   val of_string : string -> t Or_error.t
   val to_string : t -> string
 

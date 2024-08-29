@@ -5,7 +5,8 @@ let blacklisted_characters = [ '@' ]
 
 let of_string_or_error string =
   if String.equal string ""
-     || List.exists blacklisted_characters ~f:(fun char -> String.contains string char)
+     || List.exists blacklisted_characters ~f:(fun char ->
+       String.contains string char)
   then Or_error.error_s [%message "Invalid player name" (string : t)]
   else Ok string
 ;;

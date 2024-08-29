@@ -11,7 +11,9 @@ type t =
 [@@deriving fields, sexp_of]
 
 let of_player_names ~first ~second ~others =
-  match first :: second :: others |> List.contains_dup ~compare:Player_name.compare with
+  match
+    first :: second :: others |> List.contains_dup ~compare:Player_name.compare
+  with
   | true ->
     Or_error.error_s
       [%message
@@ -65,7 +67,9 @@ let waiting_players_except
     List.mem blacklist player_name ~equal:Player_name.equal |> not)
 ;;
 
-let players { current_player; waiting_players; spectators = (_ : Player_name.t list) } =
+let players
+  { current_player; waiting_players; spectators = (_ : Player_name.t list) }
+  =
   Nonempty_list.cons current_player waiting_players |> Nonempty_list.to_list
 ;;
 
@@ -73,9 +77,11 @@ let pass_turn { current_player; waiting_players; spectators } =
   let (second_player :: tl) = waiting_players in
   { current_player = second_player
   ; waiting_players =
-      List.rev tl |> Nonempty_list.create current_player |> Nonempty_list.reverse
-      (* The above is equivalent to tl @ [ current_player ] without
-     invoking [exn] functions. *)
+      List.rev tl
+      |> Nonempty_list.create current_player
+      |> Nonempty_list.reverse
+      (* The above is equivalent to tl @ [ current_player ] without invoking
+         [exn] functions. *)
   ; spectators
   }
 ;;

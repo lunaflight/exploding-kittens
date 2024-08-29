@@ -64,8 +64,8 @@ let%expect_test "duplicate players in second and waitings -> error" =
     |}]
 ;;
 
-let%expect_test "after elimination with 2 players -> One_left returned with winner \
-                 followed by spectators"
+let%expect_test "after elimination with 2 players -> One_left returned with \
+                 winner followed by spectators"
   =
   let eliminated_outcome =
     create_exn ~player_names:[ "A"; "B" ] ~spectators:[ "X"; "Y"; "Z" ]
@@ -75,8 +75,8 @@ let%expect_test "after elimination with 2 players -> One_left returned with winn
   [%expect {| (eliminated_outcome (One_left (B (A X Y Z)))) |}]
 ;;
 
-let%expect_test "after elimination with 3 players -> More_than_one_left returned with A \
-                 in spectators"
+let%expect_test "after elimination with 3 players -> More_than_one_left \
+                 returned with A in spectators"
   =
   let eliminated_outcome =
     create_exn ~player_names:[ "A"; "B"; "C" ] ~spectators:[ "X"; "Y"; "Z" ]
@@ -134,7 +134,8 @@ let%expect_test "waiting players, B and C, are output" =
 let%expect_test "only C is output" =
   let waiting_players =
     create_exn ~player_names:[ "A"; "B"; "C" ] ~spectators:[ "X"; "Y"; "Z" ]
-    |> Turn_order.waiting_players_except ~blacklist:[ Player_name.of_string_exn "B" ]
+    |> Turn_order.waiting_players_except
+         ~blacklist:[ Player_name.of_string_exn "B" ]
   in
   print_s [%message (waiting_players : Player_name.t list)];
   [%expect {| (waiting_players (C)) |}]

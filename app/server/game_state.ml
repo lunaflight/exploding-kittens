@@ -12,14 +12,20 @@ module Instant = struct
   [@@deriving fields ~getters]
 
   let update
-    { deck = (_ : Deck.t); player_hands = (_ : Player_hands.t); turn_order; next_step }
+    { deck = (_ : Deck.t)
+    ; player_hands = (_ : Player_hands.t)
+    ; turn_order
+    ; next_step
+    }
     ~deck
     ~player_hands
     =
     { deck; player_hands; turn_order; next_step }
   ;;
 
-  let pass_turn { deck; player_hands; turn_order; next_step = (_ : Next_step.t) } =
+  let pass_turn
+    { deck; player_hands; turn_order; next_step = (_ : Next_step.t) }
+    =
     { deck
     ; player_hands
     ; turn_order = Turn_order.pass_turn turn_order
@@ -50,7 +56,8 @@ let init ~deck ~first_player ~other_players =
 ;;
 
 let eliminate_current_player
-  ({ deck; player_hands; turn_order; next_step = (_ : Next_step.t) } : Instant.t)
+  ({ deck; player_hands; turn_order; next_step = (_ : Next_step.t) } :
+    Instant.t)
   =
   let current_player = Turn_order.current_player turn_order in
   match Turn_order.eliminate_current_player turn_order with
@@ -67,8 +74,8 @@ let eliminate_current_player
       }
 ;;
 
-(* TODO-someday: If the number of callbacks becomes too high (> 5?), consider linting a
-   [Callbacks.t] type. *)
+(* TODO-someday: If the number of callbacks becomes too high (> 5?), consider
+   linting a [Callbacks.t] type. *)
 let advance
   (instant : Instant.t)
   ~get_draw_or_play
@@ -77,8 +84,8 @@ let advance
   =
   let current_player = Turn_order.current_player instant.turn_order in
   match Instant.next_step instant with
-  (* TODO-someday: Eliminating players can be more robust - they need not be at the
-     front of the queue. *)
+  (* TODO-someday: Eliminating players can be more robust - they need not be at
+     the front of the queue. *)
   | Eliminate_player -> eliminate_current_player instant |> return
   | Pass_turn -> Instant.pass_turn instant |> Ongoing |> return
   | Insert_exploding_kitten ->
@@ -94,7 +101,9 @@ let advance
     Ongoing { instant with deck; next_step = Next_step.of_outcome outcome }
   | Draw_or_play ->
     (* This is fine, as [instant.current_player] is a known player. *)
-    let hand = Player_hands.hand_exn instant.player_hands ~player_name:current_player in
+    let hand =
+      Player_hands.hand_exn instant.player_hands ~player_name:current_player
+    in
     (* TODO-soon: It might be a good idea to refactor this interaction part
        elsewhere. It detracts from the main purpose of this function. *)
     let%bind outcome, player_hands, deck =
@@ -114,7 +123,8 @@ let advance
             ~deterministically:false
         with
         | Error error ->
-          `Repeat (Some [%string "Received error: %{Error.to_string_hum error}"])
+          `Repeat
+            (Some [%string "Received error: %{Error.to_string_hum error}"])
         | Ok result -> `Finished result)
     in
     let instant = Instant.update instant ~deck ~player_hands in
@@ -161,8 +171,8 @@ let start_game
   =
   let open Deferred.Or_error.Let_syntax in
   let player_names = Connector.player_names connector in
-  (* TODO-someday: Provide a way to customise the starting deck and starting hand
-     size. *)
+  (* TODO-someday: Provide a way to customise the starting deck and starting
+     hand size. *)
   let%bind deck =
     Deck.Without_exploding_kittens.default
       ~player_cnt:(List.length player_names)
@@ -171,11 +181,14 @@ let start_game
   in
   match List.permute player_names with
   | [] | [ _ ] ->
-    (* TODO-soon: Add a compile-time guarantee that [connector] has at least 2 players. *)
+    (* TODO-soon: Add a compile-time guarantee that [connector] has at least 2
+       players. *)
     Deferred.Or_error.error_s
       [%message "More than 1 player is required to start the game"]
   | first_player :: other_players ->
-    let%bind game_state = init ~deck ~first_player ~other_players |> Deferred.return in
+    let%bind game_state =
+      init ~deck ~first_player ~other_players |> Deferred.return
+    in
     Monitor.try_with_or_error (fun () ->
       start_advancing
         game_state

@@ -11,7 +11,9 @@ let of_connections connections =
       ~how:(`Max_concurrent_jobs 16)
       connections
       ~f:(fun connection ->
-        let%map player_name = Rpc.Rpc.dispatch Rpcs.Player_name.rpc connection () in
+        let%map player_name =
+          Rpc.Rpc.dispatch Rpcs.Player_name.rpc connection ()
+        in
         player_name, connection)
   in
   Player_name.Map.of_alist_or_error name_connection_alist
@@ -31,7 +33,10 @@ let get_draw_or_play t ~player_name ~hand =
 let get_exploding_kitten_insert_position t ~player_name ~deck_size =
   let open Deferred.Or_error.Let_syntax in
   let%bind connection = to_connection t ~player_name |> Deferred.return in
-  Rpc.Rpc.dispatch Rpcs.Get_exploding_kitten_insert_position.rpc connection deck_size
+  Rpc.Rpc.dispatch
+    Rpcs.Get_exploding_kitten_insert_position.rpc
+    connection
+    deck_size
 ;;
 
 let send_message t ~player_name ~message =

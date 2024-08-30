@@ -4,7 +4,8 @@ open Player_hands.For_testing.Hand_or_eliminated
 
 let%expect_test "format doc looks ok" =
   print_string Action.Draw_or_play.format_doc;
-  [%expect {| draw|CARD|double CARD@TARGET_NAME |}]
+  [%expect
+    {| draw|CARD|double CARD@TARGET_NAME|triple CARD@TARGET_NAME@TARGET_CARD |}]
 ;;
 
 let handle_and_print action ~hand ~deck ~other_player_and_hands =
@@ -187,7 +188,7 @@ let%expect_test "play Double Tacocat -> card stolen from target" =
     ~other_player_and_hands:[ "target", [ Defuse ] ];
   [%expect
     {|
-    ((outcome (Stole_randomly (Defuse target)))
+    ((outcome (Stole_randomly_via_double ((Powerless Tacocat) target Defuse)))
      (player_hands
       ((player_under_test (Playing ((Defuse 1)))) (target (Playing ()))))
      (deck ()))
@@ -230,4 +231,68 @@ let%expect_test "play Double Tacocat to player with no cards -> error" =
     ~deck:[]
     ~other_player_and_hands:[ "target", [] ];
   [%expect {| (error ("Target has an empty hand" (target target))) |}]
+;;
+
+let%expect_test "play Triple Tacocat to player with target card Defuse -> 3 \
+                 tacocats consumed and card stolen from target"
+  =
+  handle_and_print
+    (Triple (Powerless Tacocat, Player_name.of_string_exn "target", Defuse))
+    ~hand:[ Powerless Tacocat; Powerless Tacocat; Powerless Tacocat ]
+    ~deck:[]
+    ~other_player_and_hands:[ "target", [ Defuse ] ];
+  [%expect
+    {|
+    ((outcome (Stole_via_triple ((Powerless Tacocat) target Defuse)))
+     (player_hands
+      ((player_under_test (Playing ((Defuse 1)))) (target (Playing ()))))
+     (deck ()))
+    |}]
+;;
+
+let%expect_test "play Triple Tacocat to player without target card Defuse -> 3 \
+                 tacocats consumed and card failed to steal"
+  =
+  handle_and_print
+    (Triple (Powerless Tacocat, Player_name.of_string_exn "target", Defuse))
+    ~hand:[ Powerless Tacocat; Powerless Tacocat; Powerless Tacocat ]
+    ~deck:[]
+    ~other_player_and_hands:[ "target", [ Power Skip ] ];
+  [%expect
+    {|
+    ((outcome (Failed_to_steal_via_triple ((Powerless Tacocat) target Defuse)))
+     (player_hands
+      ((player_under_test (Playing ())) (target (Playing (((Power Skip) 1))))))
+     (deck ()))
+    |}]
+;;
+
+let%expect_test "play Triple Tacocat with insufficient cards -> error" =
+  handle_and_print
+    (Triple (Powerless Tacocat, Player_name.of_string_exn "target", Defuse))
+    ~hand:[ Powerless Tacocat; Powerless Tacocat ]
+    ~deck:[]
+    ~other_player_and_hands:[ "target", [ Defuse ] ];
+  [%expect
+    {|
+    (error
+     ("Not enough copies owned" (t (((Powerless Tacocat) 2)))
+      (card (Powerless Tacocat)) (n 3)))
+    |}]
+;;
+
+let%expect_test "play Triple Tacocat to nonexistent player -> error" =
+  handle_and_print
+    (Triple
+       (Powerless Tacocat, Player_name.of_string_exn "unknown_player", Defuse))
+    ~hand:[ Powerless Tacocat; Powerless Tacocat; Powerless Tacocat ]
+    ~deck:[]
+    ~other_player_and_hands:[ "target", [ Defuse ] ];
+  [%expect
+    {|
+    (error
+     (("Could not find player name" (player_name unknown_player)
+       (t ((player_under_test (Playing ())) (target (Playing ((Defuse 1)))))))
+      ("key not found" unknown_player)))
+    |}]
 ;;

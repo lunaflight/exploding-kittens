@@ -28,8 +28,7 @@ val hand_or_error : t -> player_name:Player_name.t -> Hand.t Or_error.t
 (** See [hand_or_error] for when it will throw an exception. *)
 val hand_exn : t -> player_name:Player_name.t -> Hand.t
 
-(* TODO-soon: After implementing [Steal], [Double] and [Triple], remove what's
-   not needed here. *)
+(* TODO-soon: After implementing [Steal], remove what's not needed here. *)
 
 (** Sets [player_name]'s hand to [hand].
     Returns an error if [player_name] is unknown or if they are eliminated. *)

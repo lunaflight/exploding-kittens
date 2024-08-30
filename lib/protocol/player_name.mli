@@ -6,6 +6,9 @@ type t [@@deriving bin_io, sexp]
 
 include Comparable.S with type t := t
 
+(* TODO-soon: We should also blacklist any keywords, like "you" or any card
+   names. *)
+
 (** An error is returned if the string is empty or contains blacklisted
     characters.
 

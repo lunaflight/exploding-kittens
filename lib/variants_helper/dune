@@ -1,0 +1,6 @@
+(library
+ (name variants_helper)
+ (libraries async core)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane)))

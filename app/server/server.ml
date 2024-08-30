@@ -30,6 +30,9 @@ let command =
          let%bind connector =
            Connector.of_connections connections |> Deferred.Or_error.ok_exn
          in
+         (* TODO-someday: When a player disconnects, the server crashes. A
+            saner way to handle this is to treat the player as eliminated on
+            the spot. *)
          Game_state.start_game
            ~connector
            ~get_draw_or_play:(Interaction.get_draw_or_play_exn connector)

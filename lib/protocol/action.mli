@@ -6,7 +6,10 @@ module Draw_or_play : sig
     | Draw
     | Play of Card.Power.t
     | Double of (Card.t * Player_name.t)
-    (** The [Player_name.t] represents the target of this action. *)
+    (** Contains the doubled [Card.t], followed by the target [Player_name.t]. *)
+    | Triple of (Card.t * Player_name.t * Card.t)
+    (** Contains the tripled [Card.t], followed by the target [Player_name.t],
+        and the desired [Card.t] to take. *)
   [@@deriving bin_io, sexp]
 
   (** Returns a format hint doc for how [of_string] should be used. *)
@@ -30,7 +33,10 @@ module Draw_or_play : sig
   val to_string : t -> string
 
   module For_testing : sig
-    val all_mocked : double_target:Player_name.t -> t list
+    val all_mocked
+      :  double:(Card.t * Player_name.t) list
+      -> triple:(Card.t * Player_name.t * Card.t) list
+      -> t list
   end
 end
 

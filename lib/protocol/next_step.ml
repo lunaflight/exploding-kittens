@@ -8,14 +8,16 @@ type t =
 [@@deriving sexp_of]
 
 let of_outcome =
-  let open Outcome in
-  function
-  | Defused -> Insert_exploding_kitten
-  | Drew_safely _ -> Pass_turn
-  | Exploded -> Eliminate_player
-  | Inserted_exploding_kitten _ -> Pass_turn
-  | Saw_the_future _ -> Draw_or_play
-  | Skipped -> Pass_turn
-  | Shuffled -> Draw_or_play
-  | Stole_randomly _ -> Draw_or_play
+  Outcome.(
+    function
+    | Defused -> Insert_exploding_kitten
+    | Drew_safely _ -> Pass_turn
+    | Exploded -> Eliminate_player
+    | Failed_to_steal_via_triple _ -> Draw_or_play
+    | Inserted_exploding_kitten _ -> Pass_turn
+    | Saw_the_future _ -> Draw_or_play
+    | Skipped -> Pass_turn
+    | Shuffled -> Draw_or_play
+    | Stole_via_triple _ -> Draw_or_play
+    | Stole_randomly_via_double _ -> Draw_or_play)
 ;;

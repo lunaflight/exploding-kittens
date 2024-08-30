@@ -5,13 +5,17 @@ let all_mocked_outcomes =
   Outcome.For_testing.all_mocked
     ~drew_safely:[ Powerless Cattermelon ]
     ~inserted_exploding_kitten:[ -10; -1; 0; 1; 10 ]
+    ~failed_to_steal_via_triple:
+      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
     ~saw_the_future:
       [ []
       ; [ Exploding_kitten ]
       ; [ Powerless Tacocat; Power Skip; Power See_the_future ]
       ]
-    ~stole_randomly:
-      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody" ]
+    ~stole_via_triple:
+      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
+    ~stole_randomly_via_double:
+      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
 ;;
 
 let print_alerts_of_outcomes outcomes ~alert_f =
@@ -29,6 +33,10 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
     ((outcome (Drew_safely (Powerless Cattermelon)))
      (alert "You drew a(n) Cattermelon."))
     ((outcome Exploded) (alert "You exploded!"))
+    ((outcome
+      (Failed_to_steal_via_triple ((Powerless Cattermelon) Somebody Defuse)))
+     (alert
+      "You played a(n) Cattermelon triple and failed to steal a(n) Defuse from Somebody."))
     ((outcome (Inserted_exploding_kitten -10))
      (alert "You inserted an exploding kitten at position -10."))
     ((outcome (Inserted_exploding_kitten -1))
@@ -47,10 +55,15 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
       (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
      (alert
       "You saw 3 cards at the top of the deck: Tacocat, Skip, See The Future."))
-    ((outcome Skipped) (alert "You skipped your turn."))
     ((outcome Shuffled) (alert "You shuffled the deck."))
-    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
-     (alert "You stole a(n) Cattermelon from Somebody."))
+    ((outcome Skipped) (alert "You skipped your turn."))
+    ((outcome
+      (Stole_randomly_via_double ((Powerless Cattermelon) Somebody Defuse)))
+     (alert
+      "You played a(n) Cattermelon double and randomly stole a(n) Defuse from Somebody."))
+    ((outcome (Stole_via_triple ((Powerless Cattermelon) Somebody Defuse)))
+     (alert
+      "You played a(n) Cattermelon triple and stole a(n) Defuse from Somebody."))
     |}]
 ;;
 
@@ -68,6 +81,10 @@ let%expect_test "outcome alerts for spectators look correct - same as \
     ((outcome (Drew_safely (Powerless Cattermelon)))
      (alert "Alice drew a(n) Cattermelon."))
     ((outcome Exploded) (alert "Alice exploded!"))
+    ((outcome
+      (Failed_to_steal_via_triple ((Powerless Cattermelon) Somebody Defuse)))
+     (alert
+      "Alice played a(n) Cattermelon triple and failed to steal a(n) Defuse from Somebody."))
     ((outcome (Inserted_exploding_kitten -10))
      (alert "Alice inserted an exploding kitten at position -10."))
     ((outcome (Inserted_exploding_kitten -1))
@@ -86,10 +103,15 @@ let%expect_test "outcome alerts for spectators look correct - same as \
       (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
      (alert
       "Alice saw 3 cards at the top of the deck: Tacocat, Skip, See The Future."))
-    ((outcome Skipped) (alert "Alice skipped their turn."))
     ((outcome Shuffled) (alert "Alice shuffled the deck."))
-    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
-     (alert "Alice stole a(n) Cattermelon from Somebody."))
+    ((outcome Skipped) (alert "Alice skipped their turn."))
+    ((outcome
+      (Stole_randomly_via_double ((Powerless Cattermelon) Somebody Defuse)))
+     (alert
+      "Alice played a(n) Cattermelon double and randomly stole a(n) Defuse from Somebody."))
+    ((outcome (Stole_via_triple ((Powerless Cattermelon) Somebody Defuse)))
+     (alert
+      "Alice played a(n) Cattermelon triple and stole a(n) Defuse from Somebody."))
     |}]
 ;;
 
@@ -107,6 +129,10 @@ let%expect_test "outcome alerts for others look correct - sensitive info is \
     ((outcome (Drew_safely (Powerless Cattermelon)))
      (alert "Alice drew a card."))
     ((outcome Exploded) (alert "Alice exploded!"))
+    ((outcome
+      (Failed_to_steal_via_triple ((Powerless Cattermelon) Somebody Defuse)))
+     (alert
+      "Alice played a(n) Cattermelon triple and failed to steal a(n) Defuse from Somebody."))
     ((outcome (Inserted_exploding_kitten -10))
      (alert "Alice inserted an exploding kitten somewhere."))
     ((outcome (Inserted_exploding_kitten -1))
@@ -124,10 +150,15 @@ let%expect_test "outcome alerts for others look correct - sensitive info is \
     ((outcome
       (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
      (alert "Alice saw the future of 3 cards at the top of the deck."))
-    ((outcome Skipped) (alert "Alice skipped their turn."))
     ((outcome Shuffled) (alert "Alice shuffled the deck."))
-    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
-     (alert "Alice stole a random card from Somebody."))
+    ((outcome Skipped) (alert "Alice skipped their turn."))
+    ((outcome
+      (Stole_randomly_via_double ((Powerless Cattermelon) Somebody Defuse)))
+     (alert
+      "Alice played a(n) Cattermelon double and randomly stole a card from Somebody."))
+    ((outcome (Stole_via_triple ((Powerless Cattermelon) Somebody Defuse)))
+     (alert
+      "Alice played a(n) Cattermelon triple and stole a(n) Defuse from Somebody."))
     |}]
 ;;
 
@@ -153,6 +184,11 @@ let%expect_test "specialised outcome alerts and recipients look correct - full \
     ((outcome Defused) "<no specialised alert>")
     ((outcome (Drew_safely (Powerless Cattermelon))) "<no specialised alert>")
     ((outcome Exploded) "<no specialised alert>")
+    ((outcome
+      (Failed_to_steal_via_triple ((Powerless Cattermelon) Somebody Defuse)))
+     (player Somebody)
+     (alert
+      "Alice played a(n) Cattermelon triple and failed to steal a(n) Defuse from you."))
     ((outcome (Inserted_exploding_kitten -10)) "<no specialised alert>")
     ((outcome (Inserted_exploding_kitten -1)) "<no specialised alert>")
     ((outcome (Inserted_exploding_kitten 0)) "<no specialised alert>")
@@ -163,9 +199,16 @@ let%expect_test "specialised outcome alerts and recipients look correct - full \
     ((outcome
       (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
      "<no specialised alert>")
-    ((outcome Skipped) "<no specialised alert>")
     ((outcome Shuffled) "<no specialised alert>")
-    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
-     (player Somebody) (alert "Alice stole a(n) Cattermelon from you."))
+    ((outcome Skipped) "<no specialised alert>")
+    ((outcome
+      (Stole_randomly_via_double ((Powerless Cattermelon) Somebody Defuse)))
+     (player Somebody)
+     (alert
+      "Alice played a(n) Cattermelon double and randomly stole a(n) Defuse from you."))
+    ((outcome (Stole_via_triple ((Powerless Cattermelon) Somebody Defuse)))
+     (player Somebody)
+     (alert
+      "Alice played a(n) Cattermelon triple and stole a(n) Defuse from you."))
     |}]
 ;;

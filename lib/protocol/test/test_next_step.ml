@@ -5,9 +5,13 @@ let all_mocked_outcomes =
   Outcome.For_testing.all_mocked
     ~drew_safely:[ Powerless Cattermelon ]
     ~inserted_exploding_kitten:[ 0 ]
+    ~failed_to_steal_via_triple:
+      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
     ~saw_the_future:[ [] ]
-    ~stole_randomly:
-      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody" ]
+    ~stole_via_triple:
+      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
+    ~stole_randomly_via_double:
+      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
 ;;
 
 let print_next_steps_of_outcomes outcomes =
@@ -24,11 +28,17 @@ let%expect_test "next step of outcomes" =
     ((outcome Defused) (next_step Insert_exploding_kitten))
     ((outcome (Drew_safely (Powerless Cattermelon))) (next_step Pass_turn))
     ((outcome Exploded) (next_step Eliminate_player))
+    ((outcome
+      (Failed_to_steal_via_triple ((Powerless Cattermelon) Somebody Defuse)))
+     (next_step Draw_or_play))
     ((outcome (Inserted_exploding_kitten 0)) (next_step Pass_turn))
     ((outcome (Saw_the_future ())) (next_step Draw_or_play))
-    ((outcome Skipped) (next_step Pass_turn))
     ((outcome Shuffled) (next_step Draw_or_play))
-    ((outcome (Stole_randomly ((Powerless Cattermelon) Somebody)))
+    ((outcome Skipped) (next_step Pass_turn))
+    ((outcome
+      (Stole_randomly_via_double ((Powerless Cattermelon) Somebody Defuse)))
+     (next_step Draw_or_play))
+    ((outcome (Stole_via_triple ((Powerless Cattermelon) Somebody Defuse)))
      (next_step Draw_or_play))
     |}]
 ;;

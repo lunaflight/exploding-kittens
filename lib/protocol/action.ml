@@ -6,6 +6,7 @@ module Draw_or_play = struct
     | Draw
     | Play of Card.Power.t
     | Double of (Card.t * Player_name.t)
+    | Triple of (Card.t * Player_name.t * Card.t)
   [@@deriving bin_io, sexp, variants]
 
   let format_doc =
@@ -15,6 +16,7 @@ module Draw_or_play = struct
       ~draw:(add_doc ~doc:"draw")
       ~play:(add_doc ~doc:"CARD")
       ~double:(add_doc ~doc:"double CARD@TARGET_NAME")
+      ~triple:(add_doc ~doc:"triple CARD@TARGET_NAME@TARGET_CARD")
     |> List.rev
     |> String.concat ~sep:"|"
   ;;
@@ -24,6 +26,8 @@ module Draw_or_play = struct
     | Play power -> Card.Power.to_string power
     | Double (card, target) ->
       [%string "Double %{card#Card}@%{target#Player_name}"]
+    | Triple (card, target, target_card) ->
+      [%string "Triple %{card#Card}@%{target#Player_name}@%{target_card#Card}"]
   ;;
 
   let of_string string =
@@ -37,16 +41,30 @@ module Draw_or_play = struct
       let%bind.Or_error target = Player_name.of_string_or_error target in
       let%map.Or_error card = Card.of_string_or_error card in
       Double (card, target)
-    | _ ->
+    | None | Some _ ->
       (match
-         Regex.capture_groups_exn ~case_sensitive:false ~regex:"draw" ~string
+         Regex.capture_groups_exn
+           ~case_sensitive:false
+           ~regex:"triple (.*)@(.*)@(.*)"
+           ~string
        with
-       | Some _ -> Or_error.return Draw
-       | _ ->
-         let%map.Or_error power = Card.Power.of_string_or_error string in
-         Play power)
+       | Some [ card; target; target_card ] ->
+         let%bind.Or_error card = Card.of_string_or_error card in
+         let%bind.Or_error target = Player_name.of_string_or_error target in
+         let%map.Or_error target_card = Card.of_string_or_error target_card in
+         Triple (card, target, target_card)
+       | None | Some _ ->
+         (match
+            Regex.capture_groups_exn ~case_sensitive:false ~regex:"draw" ~string
+          with
+          | Some [] -> Or_error.return Draw
+          | None | Some _ ->
+            let%map.Or_error power = Card.Power.of_string_or_error string in
+            Play power))
   ;;
 
+  (* TODO-soon: This function is getting long. Split the parts out into their
+     own function. *)
   let handle t ~player_hands ~player_name ~deck ~deterministically =
     match t with
     | Draw ->
@@ -92,7 +110,7 @@ module Draw_or_play = struct
       let%bind.Or_error player_hands =
         Player_hands.remove_card player_hands ~player_name ~card ~n:2
       in
-      let%map.Or_error card, player_hands =
+      let%map.Or_error stolen_card, player_hands =
         (* TODO-soon: You should not be able to steal from yourself. *)
         Player_hands.transfer_random_card
           player_hands
@@ -100,21 +118,49 @@ module Draw_or_play = struct
           ~target
           ~deterministically:false
       in
-      Outcome.Stole_randomly (card, target), player_hands, deck
+      ( Outcome.Stole_randomly_via_double (card, target, stolen_card)
+      , player_hands
+      , deck )
+    | Triple (card, target, target_card) ->
+      let%bind.Or_error player_hands =
+        Player_hands.remove_card player_hands ~player_name ~card ~n:3
+      in
+      (match%bind.Or_error
+         Player_hands.has_card
+           player_hands
+           ~player_name:target
+           ~card:target_card
+       with
+       | false ->
+         ( Outcome.Failed_to_steal_via_triple (card, target, target_card)
+         , player_hands
+         , deck )
+         |> Or_error.return
+       | true ->
+         let%bind.Or_error player_hands =
+           Player_hands.remove_card
+             player_hands
+             ~player_name:target
+             ~card:target_card
+             ~n:1
+         in
+         let%map.Or_error player_hands =
+           Player_hands.add_card player_hands ~player_name ~card:target_card
+         in
+         ( Outcome.Stole_via_triple (card, target, target_card)
+         , player_hands
+         , deck ))
   ;;
 
   module For_testing = struct
-    let all_mocked ~double_target =
+    let all_mocked ~double ~triple =
       Variants.fold
         ~init:[]
-        ~draw:(fun acc v -> acc @ [ v.constructor ])
+        ~draw:Variants_helper.accumulate_without_args
         ~play:(fun acc v ->
           List.map Card.Power.all ~f:v.constructor |> List.append acc)
-        ~double:(fun acc v ->
-          Card.all
-          |> List.map ~f:(fun power -> power, double_target)
-          |> List.map ~f:v.constructor
-          |> List.append acc)
+        ~double:(Variants_helper.accumulate_with_args ~args:double)
+        ~triple:(Variants_helper.accumulate_with_args ~args:triple)
     ;;
   end
 end

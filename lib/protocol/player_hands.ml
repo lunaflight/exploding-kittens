@@ -83,6 +83,19 @@ let has_card t ~player_name ~card =
   Hand.contains hand ~card
 ;;
 
+let transfer_card t ~receiver ~target ~card =
+  if Player_name.equal receiver target
+  then
+    Or_error.error_s
+      [%message
+        "Receiver and target must be different"
+          (receiver : Player_name.t)
+          (target : Player_name.t)]
+  else (
+    let%bind.Or_error t = remove_card t ~player_name:target ~card ~n:1 in
+    add_card t ~player_name:receiver ~card)
+;;
+
 let transfer_random_card t ~receiver ~target ~deterministically =
   let%bind.Or_error target_hand = hand_or_error t ~player_name:target in
   let%bind.Or_error card =
@@ -92,8 +105,7 @@ let transfer_random_card t ~receiver ~target ~deterministically =
            (Error.create_s
               [%message "Target has an empty hand" (target : Player_name.t)])
   in
-  let%bind.Or_error t = remove_card t ~player_name:target ~card ~n:1 in
-  let%map.Or_error t = add_card t ~player_name:receiver ~card in
+  let%map.Or_error t = transfer_card t ~receiver ~target ~card in
   card, t
 ;;
 

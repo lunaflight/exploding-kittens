@@ -51,11 +51,27 @@ val remove_card
 (** Returns an error if [player_name] is unknown or if they are eliminated. *)
 val has_card : t -> player_name:Player_name.t -> card:Card.t -> bool Or_error.t
 
-(** Transfers a random card from [target] to [receiver] according to
-    [deterministically] and returns the card that was transferred as well.
+(** Transfers [card] from [target] to [receiver].
 
-    An error is returned if [target] has no cards, [receiver] or [target] is
-    not a known player name, or [receiver] or [target] is eliminated. *)
+    An error is returned if:
+    - [target] does not have the card
+    - [receiver] or [target] is not a known player name
+    - [receiver] or [target] is eliminated
+    - [receiver] and [target] are the same player name *)
+val transfer_card
+  :  t
+  -> receiver:Player_name.t
+  -> target:Player_name.t
+  -> card:Card.t
+  -> t Or_error.t
+
+(** Equivalent to [transfer_card t ~receiver ~target ~card] where [card] is
+    chosen from the [target]'s hand according to [deterministically].
+    It returns the randomly chosen card followed by what is returned by
+    [transfer_card].
+
+    An error is returned if [target] has no cards or [transfer_card] returns
+    an error. *)
 val transfer_random_card
   :  t
   -> receiver:Player_name.t

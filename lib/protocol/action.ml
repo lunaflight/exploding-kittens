@@ -111,7 +111,6 @@ module Draw_or_play = struct
         Player_hands.remove_card player_hands ~player_name ~card ~n:2
       in
       let%map.Or_error stolen_card, player_hands =
-        (* TODO-soon: You should not be able to steal from yourself. *)
         Player_hands.transfer_random_card
           player_hands
           ~receiver:player_name
@@ -137,15 +136,12 @@ module Draw_or_play = struct
          , deck )
          |> Or_error.return
        | true ->
-         let%bind.Or_error player_hands =
-           Player_hands.remove_card
-             player_hands
-             ~player_name:target
-             ~card:target_card
-             ~n:1
-         in
          let%map.Or_error player_hands =
-           Player_hands.add_card player_hands ~player_name ~card:target_card
+           Player_hands.transfer_card
+             player_hands
+             ~receiver:player_name
+             ~target
+             ~card:target_card
          in
          ( Outcome.Stole_via_triple (card, target, target_card)
          , player_hands

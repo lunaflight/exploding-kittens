@@ -427,7 +427,124 @@ let%expect_test "set hand of eliminated player -> error" =
     |}]
 ;;
 
-let transfer_card_and_print player_hands ~receiver ~target =
+let transfer_card_and_print player_hands ~receiver ~target ~card =
+  let player_hands =
+    Player_hands.transfer_card
+      player_hands
+      ~receiver:(Player_name.of_string_exn receiver)
+      ~target:(Player_name.of_string_exn target)
+      ~card
+  in
+  print_s [%message (player_hands : Player_hands.t Or_error.t)]
+;;
+
+let%expect_test "transfer card from B to A -> ok" =
+  transfer_card_and_print
+    (player_hands_of_alist
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~eliminated_names:[])
+    ~receiver:"A"
+    ~target:"B"
+    ~card:(Power Skip);
+  [%expect
+    {|
+    (player_hands
+     (Ok ((A (Playing ((Defuse 1) ((Power Skip) 1)))) (B (Playing ())))))
+    |}]
+;;
+
+let%expect_test "transfer card from A to A -> error" =
+  transfer_card_and_print
+    (player_hands_of_alist
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~eliminated_names:[])
+    ~receiver:"A"
+    ~target:"A"
+    ~card:(Power Skip);
+  [%expect
+    {|
+    (player_hands
+     (Error ("Receiver and target must be different" (receiver A) (target A))))
+    |}]
+;;
+
+let%expect_test "receiver unknown -> error" =
+  transfer_card_and_print
+    (player_hands_of_alist
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~eliminated_names:[])
+    ~receiver:"unknown_player"
+    ~target:"B"
+    ~card:(Power Skip);
+  [%expect
+    {|
+    (player_hands
+     (Error
+      (("Could not find player name" (player_name unknown_player)
+        (t ((A (Playing ((Defuse 1)))) (B (Playing ())))))
+       ("key not found" unknown_player))))
+    |}]
+;;
+
+let%expect_test "target unknown -> error" =
+  transfer_card_and_print
+    (player_hands_of_alist
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~eliminated_names:[])
+    ~receiver:"A"
+    ~target:"unknown_player"
+    ~card:(Power Skip);
+  [%expect
+    {|
+    (player_hands
+     (Error
+      (("Could not find player name" (player_name unknown_player)
+        (t ((A (Playing ((Defuse 1)))) (B (Playing (((Power Skip) 1)))))))
+       ("key not found" unknown_player))))
+    |}]
+;;
+
+let%expect_test "target has does not own the card -> error" =
+  transfer_card_and_print
+    (player_hands_of_alist
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [] ]
+       ~eliminated_names:[])
+    ~receiver:"A"
+    ~target:"B"
+    ~card:(Power Skip);
+  [%expect
+    {| (player_hands (Error ("Card is not owned" (t ()) (card (Power Skip))))) |}]
+;;
+
+let%expect_test "receiver is eliminated -> error" =
+  transfer_card_and_print
+    (player_hands_of_alist
+       ~name_and_cards:[ "B", [ Power Skip ] ]
+       ~eliminated_names:[ "A" ])
+    ~receiver:"A"
+    ~target:"B"
+    ~card:(Power Skip);
+  [%expect
+    {| (player_hands (Error ("Player is eliminated" (player_name A)))) |}]
+;;
+
+let%expect_test "target is eliminated -> error" =
+  transfer_card_and_print
+    (player_hands_of_alist
+       ~name_and_cards:[ "A", [ Defuse ] ]
+       ~eliminated_names:[ "B" ])
+    ~receiver:"A"
+    ~target:"B"
+    ~card:(Power Skip);
+  [%expect
+    {| (player_hands (Error ("Player is eliminated" (player_name B)))) |}]
+;;
+
+let transfer_random_card_deterministically_and_print
+  player_hands
+  ~receiver
+  ~target
+  =
   match
     Player_hands.transfer_random_card
       player_hands
@@ -441,7 +558,7 @@ let transfer_card_and_print player_hands ~receiver ~target =
 ;;
 
 let%expect_test "transfer card from B to A -> ok" =
-  transfer_card_and_print
+  transfer_random_card_deterministically_and_print
     (player_hands_of_alist
        ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
        ~eliminated_names:[])
@@ -455,66 +572,14 @@ let%expect_test "transfer card from B to A -> ok" =
     |}]
 ;;
 
-let%expect_test "receiver unknown -> error" =
-  transfer_card_and_print
-    (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
-       ~eliminated_names:[])
-    ~receiver:"unknown_player"
-    ~target:"B";
-  [%expect
-    {|
-    (error
-     (("Could not find player name" (player_name unknown_player)
-       (t ((A (Playing ((Defuse 1)))) (B (Playing ())))))
-      ("key not found" unknown_player)))
-    |}]
-;;
-
-let%expect_test "target unknown -> error" =
-  transfer_card_and_print
-    (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
-       ~eliminated_names:[])
-    ~receiver:"A"
-    ~target:"unknown_player";
-  [%expect
-    {|
-    (error
-     (("Could not find player name" (player_name unknown_player)
-       (t ((A (Playing ((Defuse 1)))) (B (Playing (((Power Skip) 1)))))))
-      ("key not found" unknown_player)))
-    |}]
-;;
-
 let%expect_test "target has no cards -> error" =
-  transfer_card_and_print
+  transfer_random_card_deterministically_and_print
     (player_hands_of_alist
        ~name_and_cards:[ "A", [ Defuse ]; "B", [] ]
        ~eliminated_names:[])
     ~receiver:"A"
     ~target:"B";
   [%expect {| (error ("Target has an empty hand" (target B))) |}]
-;;
-
-let%expect_test "receiver is eliminated -> error" =
-  transfer_card_and_print
-    (player_hands_of_alist
-       ~name_and_cards:[ "B", [ Power Skip ] ]
-       ~eliminated_names:[ "A" ])
-    ~receiver:"A"
-    ~target:"B";
-  [%expect {| (error ("Player is eliminated" (player_name A))) |}]
-;;
-
-let%expect_test "target is eliminated -> error" =
-  transfer_card_and_print
-    (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ] ]
-       ~eliminated_names:[ "B" ])
-    ~receiver:"A"
-    ~target:"B";
-  [%expect {| (error ("Player is eliminated" (player_name B))) |}]
 ;;
 
 let eliminate_and_print player_hands ~name =

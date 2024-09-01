@@ -101,6 +101,7 @@ module Draw_or_play = struct
           ~n:1
       in
       (match power with
+       | Attack -> Outcome.Attacked, player_hands, deck
        | See_the_future ->
          Outcome.Saw_the_future (Deck.peek deck ~n:3), player_hands, deck
        | Skip -> Outcome.Skipped, player_hands, deck

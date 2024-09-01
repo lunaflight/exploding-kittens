@@ -7,7 +7,7 @@ open! Core
 type t [@@deriving sexp_of]
 
 (** Initialises [t] with the given [Player_name.t]s. All players start off
-    playing - none of them are spectators.
+    playing with 1 turn each - none of them are spectators.
     The turn order is as follows: [first] goes first, followed by [second],
     followed by [others] in the order of the given list. The head of the list
     takes lead.
@@ -32,9 +32,23 @@ val waiting_players_except
   -> blacklist:Player_name.t list
   -> Player_name.t list
 
-(** Moves the [current_player] to the end of the queue, promoting the next
+(** Consumes one turn from [current_player]. If they have no more turns left,
+    moves the [current_player] to the end of the queue, promoting the next
     waiting player to be the [current_player]. *)
 val pass_turn : t -> t
+
+(** Moves the [current_player] to the end of the queue, promoting the next
+    waiting player to be the [current_player]. The waiting player must now do
+    at least as many turns as [current_player] had. This mirrors the rules of
+    [Attack] in the original game, outlined below.
+
+    If [current_player] had 1 turn, the waiting player must now take
+    [additional_turns] turns.
+    Otherwise, the waiting player must now take [current_player]'s number of
+    turns + [additional_turns] turns.
+
+    [additional_turns] should be at least 1 - no validation is done. *)
+val give_all_turns_by_attack : t -> additional_turns:int -> t
 
 module Eliminated_outcome : sig
   type nonrec t =
@@ -52,9 +66,18 @@ end
 val eliminate_current_player : t -> Eliminated_outcome.t
 
 module For_testing : sig
+  module Player_and_turns : sig
+    type t =
+      { player_name : Player_name.t
+      ; turns : int
+      }
+
+    val of_player_name : Player_name.t -> turns:int -> t
+  end
+
   val create
-    :  current_player:Player_name.t
-    -> waiting_players:Player_name.t Nonempty_list.t
+    :  current_player:Player_and_turns.t
+    -> waiting_players:Player_and_turns.t Nonempty_list.t
     -> spectators:Player_name.t list
     -> t
 end

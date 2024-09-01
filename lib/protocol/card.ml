@@ -3,9 +3,10 @@ open! Async
 
 module Power = struct
   type t =
+    | Attack
     | See_the_future
-    | Skip
     | Shuffle
+    | Skip
   [@@deriving
     bin_io
     , compare

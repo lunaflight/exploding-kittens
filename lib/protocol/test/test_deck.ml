@@ -178,18 +178,19 @@ let%expect_test "default with 2 players -> contains 2 defuses and looks right" =
     {|
     (deck
      (Ok
-      (Defuse Defuse (Power See_the_future) (Power See_the_future)
+      (Defuse Defuse (Power Attack) (Power Attack) (Power Attack) (Power Attack)
        (Power See_the_future) (Power See_the_future) (Power See_the_future)
-       (Power Skip) (Power Skip) (Power Skip) (Power Skip) (Power Shuffle)
-       (Power Shuffle) (Power Shuffle) (Power Shuffle) (Powerless Beard_cat)
-       (Powerless Beard_cat) (Powerless Beard_cat) (Powerless Beard_cat)
+       (Power See_the_future) (Power See_the_future) (Power Shuffle)
+       (Power Shuffle) (Power Shuffle) (Power Shuffle) (Power Skip) (Power Skip)
+       (Power Skip) (Power Skip) (Powerless Beard_cat) (Powerless Beard_cat)
+       (Powerless Beard_cat) (Powerless Beard_cat) (Powerless Cattermelon)
        (Powerless Cattermelon) (Powerless Cattermelon) (Powerless Cattermelon)
-       (Powerless Cattermelon) (Powerless Hairy_potato_cat)
        (Powerless Hairy_potato_cat) (Powerless Hairy_potato_cat)
-       (Powerless Hairy_potato_cat) (Powerless Rainbow_ralphing_cat)
+       (Powerless Hairy_potato_cat) (Powerless Hairy_potato_cat)
        (Powerless Rainbow_ralphing_cat) (Powerless Rainbow_ralphing_cat)
-       (Powerless Rainbow_ralphing_cat) (Powerless Tacocat) (Powerless Tacocat)
-       (Powerless Tacocat) (Powerless Tacocat))))
+       (Powerless Rainbow_ralphing_cat) (Powerless Rainbow_ralphing_cat)
+       (Powerless Tacocat) (Powerless Tacocat) (Powerless Tacocat)
+       (Powerless Tacocat))))
     |}]
 ;;
 
@@ -199,18 +200,19 @@ let%expect_test "default with 5 players -> contains 1 defuse and looks right" =
     {|
     (deck
      (Ok
-      (Defuse (Power See_the_future) (Power See_the_future)
+      (Defuse (Power Attack) (Power Attack) (Power Attack) (Power Attack)
        (Power See_the_future) (Power See_the_future) (Power See_the_future)
-       (Power Skip) (Power Skip) (Power Skip) (Power Skip) (Power Shuffle)
-       (Power Shuffle) (Power Shuffle) (Power Shuffle) (Powerless Beard_cat)
-       (Powerless Beard_cat) (Powerless Beard_cat) (Powerless Beard_cat)
+       (Power See_the_future) (Power See_the_future) (Power Shuffle)
+       (Power Shuffle) (Power Shuffle) (Power Shuffle) (Power Skip) (Power Skip)
+       (Power Skip) (Power Skip) (Powerless Beard_cat) (Powerless Beard_cat)
+       (Powerless Beard_cat) (Powerless Beard_cat) (Powerless Cattermelon)
        (Powerless Cattermelon) (Powerless Cattermelon) (Powerless Cattermelon)
-       (Powerless Cattermelon) (Powerless Hairy_potato_cat)
        (Powerless Hairy_potato_cat) (Powerless Hairy_potato_cat)
-       (Powerless Hairy_potato_cat) (Powerless Rainbow_ralphing_cat)
+       (Powerless Hairy_potato_cat) (Powerless Hairy_potato_cat)
        (Powerless Rainbow_ralphing_cat) (Powerless Rainbow_ralphing_cat)
-       (Powerless Rainbow_ralphing_cat) (Powerless Tacocat) (Powerless Tacocat)
-       (Powerless Tacocat) (Powerless Tacocat))))
+       (Powerless Rainbow_ralphing_cat) (Powerless Rainbow_ralphing_cat)
+       (Powerless Tacocat) (Powerless Tacocat) (Powerless Tacocat)
+       (Powerless Tacocat))))
     |}]
 ;;
 

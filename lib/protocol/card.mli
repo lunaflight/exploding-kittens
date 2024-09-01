@@ -3,9 +3,10 @@ open! Async
 
 module Power : sig
   type t =
+    | Attack
     | See_the_future
-    | Skip
     | Shuffle
+    | Skip
   [@@deriving bin_io, enumerate, sexp]
 
   val of_string_exn : string -> t

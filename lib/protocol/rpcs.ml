@@ -69,7 +69,7 @@ module Get_draw_or_play = struct
 
     let%expect_test _ =
       print_endline [%bin_digest: t];
-      [%expect {| 17b4e8fbfde34de07accdb9e9e6693db |}];
+      [%expect {| 820b93fe652b1e6f23bc92d734f9c278 |}];
       return ()
     ;;
   end
@@ -79,7 +79,7 @@ module Get_draw_or_play = struct
 
     let%expect_test _ =
       print_endline [%bin_digest: t];
-      [%expect {| 9c89578cf036ac285be09274d32ef03e |}];
+      [%expect {| b3ef456b58a8d4cca907bbd9dd918518 |}];
       return ()
     ;;
   end

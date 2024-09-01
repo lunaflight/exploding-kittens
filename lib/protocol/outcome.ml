@@ -1,6 +1,7 @@
 open! Core
 
 type t =
+  | Attacked
   | Defused
   | Drew_safely of Card.t
   | Exploded
@@ -15,6 +16,10 @@ type t =
 
 let fill_uncensored_alert_template t ~player_name ~possessive_pronoun =
   match t with
+  | Attacked ->
+    [%string
+      "%{player_name#Player_name} passed %{possessive_pronoun} turn by \
+       attacking."]
   | Defused ->
     [%string "%{player_name#Player_name} defused an exploding kitten!"]
   (* TODO-someday: Perhaps we can provide a lookup table to decide between "a"
@@ -74,6 +79,7 @@ let to_self_alert t =
 
 let to_specialised_alert t ~player_name =
   match t with
+  | Attacked
   | Defused
   | Drew_safely _
   | Exploded
@@ -103,6 +109,7 @@ let to_specialised_alert t ~player_name =
 
 let to_censored_alert t ~player_name =
   match t with
+  | Attacked
   | Defused
   | Exploded
   | Failed_to_steal_via_triple _
@@ -140,6 +147,7 @@ module For_testing = struct
     =
     Variants.fold
       ~init:[]
+      ~attacked:Variants_helper.accumulate_without_args
       ~defused:Variants_helper.accumulate_without_args
       ~drew_safely:(Variants_helper.accumulate_with_args ~args:drew_safely)
       ~exploded:Variants_helper.accumulate_without_args

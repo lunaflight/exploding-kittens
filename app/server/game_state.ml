@@ -32,6 +32,18 @@ module Instant = struct
     ; next_step = Draw_or_play
     }
   ;;
+
+  let give_all_turns_by_attack
+    { deck; player_hands; turn_order; next_step = (_ : Next_step.t) }
+    ~additional_turns
+    =
+    { deck
+    ; player_hands
+    ; turn_order =
+        Turn_order.give_all_turns_by_attack turn_order ~additional_turns
+    ; next_step = Draw_or_play
+    }
+  ;;
 end
 
 type t =
@@ -87,6 +99,11 @@ let advance
   (* TODO-someday: Eliminating players can be more robust - they need not be at
      the front of the queue. *)
   | Eliminate_player -> eliminate_current_player instant |> return
+  | Give_turns_via_attacking ->
+    instant
+    |> Instant.give_all_turns_by_attack ~additional_turns:2
+    |> Ongoing
+    |> return
   | Pass_turn -> Instant.pass_turn instant |> Ongoing |> return
   | Insert_exploding_kitten ->
     let%bind position =

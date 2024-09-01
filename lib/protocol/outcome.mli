@@ -1,6 +1,7 @@
 open! Core
 
 type t =
+  | Attacked
   | Defused
   | Drew_safely of Card.t
   | Exploded

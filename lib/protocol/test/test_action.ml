@@ -18,6 +18,7 @@ let print_parse_table ~format_f =
     Action.Draw_or_play.(
       function
       | Draw -> "draw"
+      | Play Attack -> "attack"
       | Play See_the_future -> "see the future"
       | Play Skip -> "skip"
       | Play Shuffle -> "shuffle"
@@ -47,8 +48,9 @@ let%expect_test "able to parse all lowercase" =
     {|
     (parse_table
      (Ok
-      ((draw Draw) ("see the future" (Play See_the_future)) (skip (Play Skip))
-       (shuffle (Play Shuffle))
+      ((draw Draw) (attack (Play Attack))
+       ("see the future" (Play See_the_future)) (shuffle (Play Shuffle))
+       (skip (Play Skip))
        ("double cattermelon@somebody"
         (Double ((Powerless Cattermelon) somebody)))
        ("triple cattermelon@somebody@defuse"
@@ -62,8 +64,9 @@ let%expect_test "able to parse all UPPERCASE" =
     {|
     (parse_table
      (Ok
-      ((DRAW Draw) ("SEE THE FUTURE" (Play See_the_future)) (SKIP (Play Skip))
-       (SHUFFLE (Play Shuffle))
+      ((DRAW Draw) (ATTACK (Play Attack))
+       ("SEE THE FUTURE" (Play See_the_future)) (SHUFFLE (Play Shuffle))
+       (SKIP (Play Skip))
        ("DOUBLE CATTERMELON@SOMEBODY"
         (Double ((Powerless Cattermelon) SOMEBODY)))
        ("TRIPLE CATTERMELON@SOMEBODY@DEFUSE"
@@ -77,8 +80,9 @@ let%expect_test "able to parse Titlecase" =
     {|
     (parse_table
      (Ok
-      ((Draw Draw) ("See the future" (Play See_the_future)) (Skip (Play Skip))
-       (Shuffle (Play Shuffle))
+      ((Draw Draw) (Attack (Play Attack))
+       ("See the future" (Play See_the_future)) (Shuffle (Play Shuffle))
+       (Skip (Play Skip))
        ("Double Cattermelon@Somebody"
         (Double ((Powerless Cattermelon) Somebody)))
        ("Triple Cattermelon@Somebody@Defuse"

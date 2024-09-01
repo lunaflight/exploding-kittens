@@ -36,4 +36,4 @@ Alternatively, read the [official
 PDF](https://www.buffalolib.org/sites/default/files/gaming-unplugged/inst/Exploding%20Kittens%20Instructions.pdf)
 explaining the rules.
 
-Note: `Favor`, `Attack` and `Nope` are currently unimplemented.
+Note: `Favor` and `Nope` are currently unimplemented.

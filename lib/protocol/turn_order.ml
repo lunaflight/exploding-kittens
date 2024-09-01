@@ -1,11 +1,28 @@
 open! Core
 
-(** TODO-soon: When the [Attack] card is added, consider using an assoc list
-    to track turns left for a player to make. It is also likely that ensuring
-    that each player only appears once in the order is important. *)
+module Nonempty_list = struct
+  include Nonempty_list
+
+  (* This is equivalent to xs @ [ x ] without invoking [exn] functions. *)
+  let append' xs x =
+    List.rev xs |> Nonempty_list.create x |> Nonempty_list.reverse
+  ;;
+end
+
+module Player_and_turns = struct
+  type t =
+    { player_name : Player_name.t
+    ; turns : int
+    }
+  [@@deriving fields ~getters, sexp_of]
+
+  let of_player_name player_name ~turns = { turns; player_name }
+  let decrement_turn { player_name; turns } = { player_name; turns = turns - 1 }
+end
+
 type t =
-  { current_player : Player_name.t
-  ; waiting_players : Player_name.t Nonempty_list.t
+  { current_player : Player_and_turns.t
+  ; waiting_players : Player_and_turns.t Nonempty_list.t
   ; spectators : Player_name.t list
   }
 [@@deriving fields, sexp_of]
@@ -23,33 +40,39 @@ let of_player_names ~first ~second ~others =
           (others : Player_name.t list)]
   | false ->
     Or_error.return
-      { current_player = first
-      ; waiting_players = Nonempty_list.create second others
+      { current_player = Player_and_turns.of_player_name first ~turns:1
+      ; waiting_players =
+          others
+          |> List.map ~f:(Player_and_turns.of_player_name ~turns:1)
+          |> Nonempty_list.create
+               (Player_and_turns.of_player_name second ~turns:1)
       ; spectators = []
       }
 ;;
 
 let current_player
   { current_player
-  ; waiting_players = (_ : Player_name.t Nonempty_list.t)
+  ; waiting_players = (_ : Player_and_turns.t Nonempty_list.t)
   ; spectators = (_ : Player_name.t list)
   }
   =
-  current_player
+  Player_and_turns.player_name current_player
 ;;
 
 let waiting_players
-  { current_player = (_ : Player_name.t)
+  { current_player = (_ : Player_and_turns.t)
   ; waiting_players
   ; spectators = (_ : Player_name.t list)
   }
   =
-  Nonempty_list.to_list waiting_players
+  waiting_players
+  |> Nonempty_list.map ~f:Player_and_turns.player_name
+  |> Nonempty_list.to_list
 ;;
 
 let spectators
-  { current_player = (_ : Player_name.t)
-  ; waiting_players = (_ : Player_name.t Nonempty_list.t)
+  { current_player = (_ : Player_and_turns.t)
+  ; waiting_players = (_ : Player_and_turns.t Nonempty_list.t)
   ; spectators
   }
   =
@@ -57,31 +80,56 @@ let spectators
 ;;
 
 let waiting_players_except
-  { current_player = (_ : Player_name.t)
+  { current_player = (_ : Player_and_turns.t)
   ; waiting_players
   ; spectators = (_ : Player_name.t list)
   }
   ~blacklist
   =
-  Nonempty_list.filter waiting_players ~f:(fun player_name ->
+  waiting_players
+  |> Nonempty_list.map ~f:Player_and_turns.player_name
+  |> Nonempty_list.filter ~f:(fun player_name ->
     List.mem blacklist player_name ~equal:Player_name.equal |> not)
 ;;
 
 let players
   { current_player; waiting_players; spectators = (_ : Player_name.t list) }
   =
-  Nonempty_list.cons current_player waiting_players |> Nonempty_list.to_list
+  Nonempty_list.cons current_player waiting_players
+  |> Nonempty_list.map ~f:Player_and_turns.player_name
+  |> Nonempty_list.to_list
 ;;
 
 let pass_turn { current_player; waiting_players; spectators } =
-  let (second_player :: tl) = waiting_players in
-  { current_player = second_player
+  if Player_and_turns.turns current_player <= 1
+  then (
+    let (second_player :: tl) = waiting_players in
+    { current_player = second_player
+    ; waiting_players = Nonempty_list.append' tl current_player
+    ; spectators
+    })
+  else
+    { current_player = Player_and_turns.decrement_turn current_player
+    ; waiting_players
+    ; spectators
+    }
+;;
+
+let give_all_turns_by_attack
+  { current_player; waiting_players; spectators }
+  ~additional_turns
+  =
+  let%tydi { player_name = first_player; turns } = current_player in
+  let ({ player_name = second_player; turns = (_ : int) } :: tl) =
+    waiting_players
+  in
+  { current_player =
+      { player_name = second_player
+      ; turns =
+          (if turns = 1 then additional_turns else turns + additional_turns)
+      }
   ; waiting_players =
-      List.rev tl
-      |> Nonempty_list.create current_player
-      |> Nonempty_list.reverse
-      (* The above is equivalent to tl @ [ current_player ] without invoking
-         [exn] functions. *)
+      Nonempty_list.append' tl { player_name = first_player; turns = 1 }
   ; spectators
   }
 ;;
@@ -94,9 +142,10 @@ module Eliminated_outcome = struct
 end
 
 let eliminate_current_player { current_player; waiting_players; spectators } =
-  let spectators = current_player :: spectators in
+  let spectators = Player_and_turns.player_name current_player :: spectators in
   match waiting_players with
-  | [ player ] -> Eliminated_outcome.One_left (player, spectators)
+  | [ { player_name; turns = (_ : int) } ] ->
+    Eliminated_outcome.One_left (player_name, spectators)
   | new_current_player :: hd :: tl ->
     Eliminated_outcome.More_than_one_left
       { current_player = new_current_player
@@ -106,5 +155,7 @@ let eliminate_current_player { current_player; waiting_players; spectators } =
 ;;
 
 module For_testing = struct
+  module Player_and_turns = Player_and_turns
+
   let create = Fields.create
 end

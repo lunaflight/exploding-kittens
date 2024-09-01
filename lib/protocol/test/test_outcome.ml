@@ -29,6 +29,7 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
   print_alerts_of_outcomes all_mocked_outcomes ~alert_f:Outcome.to_self_alert;
   [%expect
     {|
+    ((outcome Attacked) (alert "You passed your turn by attacking."))
     ((outcome Defused) (alert "You defused an exploding kitten!"))
     ((outcome (Drew_safely (Powerless Cattermelon)))
      (alert "You drew a(n) Cattermelon."))
@@ -77,6 +78,7 @@ let%expect_test "outcome alerts for spectators look correct - same as \
          ~player_name:(Player_name.of_string_exn "Alice"));
   [%expect
     {|
+    ((outcome Attacked) (alert "Alice passed their turn by attacking."))
     ((outcome Defused) (alert "Alice defused an exploding kitten!"))
     ((outcome (Drew_safely (Powerless Cattermelon)))
      (alert "Alice drew a(n) Cattermelon."))
@@ -125,6 +127,7 @@ let%expect_test "outcome alerts for others look correct - sensitive info is \
          ~player_name:(Player_name.of_string_exn "Alice"));
   [%expect
     {|
+    ((outcome Attacked) (alert "Alice passed their turn by attacking."))
     ((outcome Defused) (alert "Alice defused an exploding kitten!"))
     ((outcome (Drew_safely (Powerless Cattermelon)))
      (alert "Alice drew a card."))
@@ -181,6 +184,7 @@ let%expect_test "specialised outcome alerts and recipients look correct - full \
     ~player_name:(Player_name.of_string_exn "Alice");
   [%expect
     {|
+    ((outcome Attacked) "<no specialised alert>")
     ((outcome Defused) "<no specialised alert>")
     ((outcome (Drew_safely (Powerless Cattermelon))) "<no specialised alert>")
     ((outcome Exploded) "<no specialised alert>")

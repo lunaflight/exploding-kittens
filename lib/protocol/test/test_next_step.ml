@@ -25,6 +25,7 @@ let%expect_test "next step of outcomes" =
   print_next_steps_of_outcomes all_mocked_outcomes;
   [%expect
     {|
+    ((outcome Attacked) (next_step Give_turns_via_attacking))
     ((outcome Defused) (next_step Insert_exploding_kitten))
     ((outcome (Drew_safely (Powerless Cattermelon))) (next_step Pass_turn))
     ((outcome Exploded) (next_step Eliminate_player))

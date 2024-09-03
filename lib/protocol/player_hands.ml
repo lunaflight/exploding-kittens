@@ -56,6 +56,7 @@ let hand_or_error t ~player_name =
   | Playing hand -> Or_error.return hand
 ;;
 
+let is_playing t ~player_name = hand_or_error t ~player_name |> Or_error.is_ok
 let hand_exn t ~player_name = hand_or_error t ~player_name |> Or_error.ok_exn
 
 let set_hand t ~player_name ~hand =

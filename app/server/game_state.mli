@@ -33,6 +33,11 @@ type t =
     The [Deferred.t] becomes determined when there is a winner. *)
 val start_game
   :  connector:Connector.t
+  -> get_card_to_give:
+       (player_name:Player_name.t
+        -> hand:Hand.t
+        -> reprompt_context:string option
+        -> Card.t Deferred.t)
   -> get_draw_or_play:
        (player_name:Player_name.t
         -> hand:Hand.t

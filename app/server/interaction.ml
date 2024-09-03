@@ -111,6 +111,19 @@ let send_player_if_some connector ~player_name ~message =
   | Some message -> Connector.send_message connector ~player_name ~message
 ;;
 
+let get_card_to_give connector ~player_name ~hand ~reprompt_context =
+  let open Deferred.Or_error.Let_syntax in
+  let%bind () =
+    send_player_if_some connector ~player_name ~message:reprompt_context
+  in
+  Connector.get_card_to_give connector ~player_name ~hand
+;;
+
+let get_card_to_give_exn connector ~player_name ~hand ~reprompt_context =
+  get_card_to_give connector ~player_name ~hand ~reprompt_context
+  |> Deferred.Or_error.ok_exn
+;;
+
 let get_draw_or_play connector ~player_name ~hand ~reprompt_context =
   let open Deferred.Or_error.Let_syntax in
   let%bind () =

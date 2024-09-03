@@ -4,7 +4,8 @@ open! Async
 module Draw_or_play = struct
   type t =
     | Draw
-    | Play of Card.Power.t
+    | Play_targetless of Card.Power.Targetless.t
+    | Play_targeted of (Card.Power.Targeted.t * Player_name.t)
     | Double of (Card.t * Player_name.t)
     | Triple of (Card.t * Player_name.t * Card.t)
   [@@deriving bin_io, sexp, variants]
@@ -14,22 +15,19 @@ module Draw_or_play = struct
     Variants.fold
       ~init:[]
       ~draw:(add_doc ~doc:"draw")
-      ~play:(add_doc ~doc:"CARD")
+      ~play_targetless:(add_doc ~doc:"CARD")
+      ~play_targeted:(add_doc ~doc:"CARD@TARGET_NAME")
       ~double:(add_doc ~doc:"double CARD@TARGET_NAME")
       ~triple:(add_doc ~doc:"triple CARD@TARGET_NAME@TARGET_CARD")
     |> List.rev
     |> String.concat ~sep:"|"
   ;;
 
-  let to_string = function
-    | Draw -> "Draw"
-    | Play power -> Card.Power.to_string power
-    | Double (card, target) ->
-      [%string "Double %{card#Card}@%{target#Player_name}"]
-    | Triple (card, target, target_card) ->
-      [%string "Triple %{card#Card}@%{target#Player_name}@%{target_card#Card}"]
-  ;;
-
+  (* TODO-soon: This function is getting long. The order is not obvious and
+     hard to maintain.
+     Split the parts out into their
+     own function. We can have a match function that gets the regex pattern of
+     a variant. *)
   let of_string string =
     match
       Regex.capture_groups_exn
@@ -55,12 +53,30 @@ module Draw_or_play = struct
          Triple (card, target, target_card)
        | None | Some _ ->
          (match
-            Regex.capture_groups_exn ~case_sensitive:false ~regex:"draw" ~string
+            Regex.capture_groups_exn
+              ~case_sensitive:false
+              ~regex:"(.*)@(.*)"
+              ~string
           with
-          | Some [] -> Or_error.return Draw
+          | Some [ targeted_card; target ] ->
+            let%bind.Or_error targeted_card =
+              Card.Power.Targeted.of_string_or_error targeted_card
+            in
+            let%map.Or_error target = Player_name.of_string_or_error target in
+            Play_targeted (targeted_card, target)
           | None | Some _ ->
-            let%map.Or_error power = Card.Power.of_string_or_error string in
-            Play power))
+            (match
+               Regex.capture_groups_exn
+                 ~case_sensitive:false
+                 ~regex:"draw"
+                 ~string
+             with
+             | Some [] -> Or_error.return Draw
+             | None | Some _ ->
+               let%map.Or_error targetless =
+                 Card.Power.Targetless.of_string_or_error string
+               in
+               Play_targetless targetless)))
   ;;
 
   (* TODO-soon: This function is getting long. Split the parts out into their
@@ -92,21 +108,43 @@ module Draw_or_play = struct
        | _ ->
          (Outcome.Drew_safely card, player_hands_with_card_added, deck)
          |> Or_error.return)
-    | Play power ->
+    | Play_targetless targetless_card ->
       let%map.Or_error player_hands =
         Player_hands.remove_card
           player_hands
           ~player_name
-          ~card:(Power power)
+          ~card:(Power (Targetless targetless_card))
           ~n:1
       in
-      (match power with
+      (match targetless_card with
        | Attack -> Outcome.Attacked, player_hands, deck
        | See_the_future ->
          Outcome.Saw_the_future (Deck.peek deck ~n:3), player_hands, deck
        | Skip -> Outcome.Skipped, player_hands, deck
        | Shuffle ->
          Outcome.Shuffled, player_hands, Deck.shuffle deck ~deterministically)
+    | Play_targeted (targeted_card, target) ->
+      if Player_name.equal player_name target
+      then
+        Or_error.error_s
+          [%message
+            "Target cannot be the performing player"
+              (player_name : Player_name.t)
+              (target : Player_name.t)]
+      else if Player_hands.is_playing player_hands ~player_name:target |> not
+      then
+        Or_error.error_s
+          [%message "Target must be playing" (target : Player_name.t)]
+      else (
+        let%map.Or_error player_hands =
+          Player_hands.remove_card
+            player_hands
+            ~player_name
+            ~card:(Power (Targeted targeted_card))
+            ~n:1
+        in
+        match targeted_card with
+        | Favor -> Outcome.Favored target, player_hands, deck)
     | Double (card, target) ->
       let%bind.Or_error player_hands =
         Player_hands.remove_card player_hands ~player_name ~card ~n:2
@@ -150,12 +188,16 @@ module Draw_or_play = struct
   ;;
 
   module For_testing = struct
-    let all_mocked ~double ~triple =
+    let all_mocked ~play_targeted_target ~double ~triple =
       Variants.fold
         ~init:[]
         ~draw:Variants_helper.accumulate_without_args
-        ~play:(fun acc v ->
-          List.map Card.Power.all ~f:v.constructor |> List.append acc)
+        ~play_targetless:(fun acc v ->
+          List.map Card.Power.Targetless.all ~f:v.constructor |> List.append acc)
+        ~play_targeted:(fun acc v ->
+          List.map Card.Power.Targeted.all ~f:(fun targeted_card ->
+            v.constructor (targeted_card, play_targeted_target))
+          |> List.append acc)
         ~double:(Variants_helper.accumulate_with_args ~args:double)
         ~triple:(Variants_helper.accumulate_with_args ~args:triple)
     ;;
@@ -166,5 +208,14 @@ module Insert_exploding_kitten = struct
   let handle ~position ~deck =
     ( Outcome.Inserted_exploding_kitten position
     , Deck.insert deck ~card:Card.Exploding_kitten ~position )
+  ;;
+end
+
+module Give_a_card = struct
+  let handle ~player_hands ~receiver ~target ~card =
+    let%map.Or_error player_hands =
+      Player_hands.transfer_card player_hands ~receiver ~target ~card
+    in
+    Outcome.Received_card_from (card, target), player_hands
   ;;
 end

@@ -5,7 +5,7 @@ open Player_hands.For_testing.Hand_or_eliminated
 let%expect_test "format doc looks ok" =
   print_string Action.Draw_or_play.format_doc;
   [%expect
-    {| draw|CARD|double CARD@TARGET_NAME|triple CARD@TARGET_NAME@TARGET_CARD |}]
+    {| draw|CARD|CARD@TARGET_NAME|double CARD@TARGET_NAME|triple CARD@TARGET_NAME@TARGET_CARD |}]
 ;;
 
 let handle_and_print action ~hand ~deck ~other_player_and_hands =
@@ -81,16 +81,21 @@ let%expect_test "draw non-Exploding_kitten -> drew successfully" =
 ;;
 
 let%expect_test "play Power without owning -> error" =
-  handle_and_print (Play Skip) ~hand:[] ~deck:[] ~other_player_and_hands:[];
-  [%expect {| (error ("Card is not owned" (t ()) (card (Power Skip)))) |}]
+  handle_and_print
+    (Play_targetless Skip)
+    ~hand:[]
+    ~deck:[]
+    ~other_player_and_hands:[];
+  [%expect
+    {| (error ("Card is not owned" (t ()) (card (Power (Targetless Skip))))) |}]
 ;;
 
 let%expect_test "play See_the_future with deck of 0 cards -> consumed and 0 \
                  seen"
   =
   handle_and_print
-    (Play See_the_future)
-    ~hand:[ Power See_the_future ]
+    (Play_targetless See_the_future)
+    ~hand:[ Power (Targetless See_the_future) ]
     ~deck:[]
     ~other_player_and_hands:[];
   [%expect
@@ -103,8 +108,8 @@ let%expect_test "play See_the_future with deck of 0 cards -> consumed and 0 \
 let%expect_test "play See_the_future with deck of 1 card -> consumed and 1 seen"
   =
   handle_and_print
-    (Play See_the_future)
-    ~hand:[ Power See_the_future ]
+    (Play_targetless See_the_future)
+    ~hand:[ Power (Targetless See_the_future) ]
     ~deck:[ Exploding_kitten ]
     ~other_player_and_hands:[];
   [%expect
@@ -118,13 +123,13 @@ let%expect_test "play See_the_future with deck of 4 cards -> consumed and 3 \
                  seen in order"
   =
   handle_and_print
-    (Play See_the_future)
-    ~hand:[ Power See_the_future ]
+    (Play_targetless See_the_future)
+    ~hand:[ Power (Targetless See_the_future) ]
     ~deck:
       [ Powerless Beard_cat
       ; Powerless Cattermelon
       ; Powerless Rainbow_ralphing_cat
-      ; Power Skip
+      ; Power (Targetless Skip)
       ]
     ~other_player_and_hands:[];
   [%expect
@@ -136,14 +141,14 @@ let%expect_test "play See_the_future with deck of 4 cards -> consumed and 3 \
      (player_hands ((player_under_test (Playing ()))))
      (deck
       ((Powerless Beard_cat) (Powerless Cattermelon)
-       (Powerless Rainbow_ralphing_cat) (Power Skip))))
+       (Powerless Rainbow_ralphing_cat) (Power (Targetless Skip)))))
     |}]
 ;;
 
 let%expect_test "play Skip -> consumed and no card drawn" =
   handle_and_print
-    (Play Skip)
-    ~hand:[ Power Skip ]
+    (Play_targetless Skip)
+    ~hand:[ Power (Targetless Skip) ]
     ~deck:[]
     ~other_player_and_hands:[];
   [%expect
@@ -155,8 +160,8 @@ let%expect_test "play Skip -> consumed and no card drawn" =
 
 let%expect_test "play Shuffle -> consumed and deck is shuffled" =
   handle_and_print
-    (Play Shuffle)
-    ~hand:[ Power Shuffle ]
+    (Play_targetless Shuffle)
+    ~hand:[ Power (Targetless Shuffle) ]
     ~deck:
       [ Powerless Beard_cat
       ; Powerless Cattermelon
@@ -164,9 +169,9 @@ let%expect_test "play Shuffle -> consumed and deck is shuffled" =
       ; Powerless Rainbow_ralphing_cat
       ; Powerless Tacocat
       ; Defuse
-      ; Power Skip
-      ; Power Shuffle
-      ; Power See_the_future
+      ; Power (Targetless Skip)
+      ; Power (Targetless Shuffle)
+      ; Power (Targetless See_the_future)
       ; Exploding_kitten
       ]
     ~other_player_and_hands:[];
@@ -174,9 +179,10 @@ let%expect_test "play Shuffle -> consumed and deck is shuffled" =
     {|
     ((outcome Shuffled) (player_hands ((player_under_test (Playing ()))))
      (deck
-      (Defuse (Powerless Cattermelon) (Power Skip) (Power See_the_future)
-       (Powerless Tacocat) Exploding_kitten (Powerless Rainbow_ralphing_cat)
-       (Powerless Hairy_potato_cat) (Power Shuffle) (Powerless Beard_cat))))
+      (Defuse (Powerless Cattermelon) (Power (Targetless Skip))
+       (Power (Targetless See_the_future)) (Powerless Tacocat) Exploding_kitten
+       (Powerless Rainbow_ralphing_cat) (Powerless Hairy_potato_cat)
+       (Power (Targetless Shuffle)) (Powerless Beard_cat))))
     |}]
 ;;
 
@@ -257,12 +263,13 @@ let%expect_test "play Triple Tacocat to player without target card Defuse -> 3 \
     (Triple (Powerless Tacocat, Player_name.of_string_exn "target", Defuse))
     ~hand:[ Powerless Tacocat; Powerless Tacocat; Powerless Tacocat ]
     ~deck:[]
-    ~other_player_and_hands:[ "target", [ Power Skip ] ];
+    ~other_player_and_hands:[ "target", [ Power (Targetless Skip) ] ];
   [%expect
     {|
     ((outcome (Failed_to_steal_via_triple ((Powerless Tacocat) target Defuse)))
      (player_hands
-      ((player_under_test (Playing ())) (target (Playing (((Power Skip) 1))))))
+      ((player_under_test (Playing ()))
+       (target (Playing (((Power (Targetless Skip)) 1))))))
      (deck ()))
     |}]
 ;;

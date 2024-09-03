@@ -8,6 +8,7 @@ let action_of_string_and_print string =
 
 let all_mocked_draw_or_plays =
   Action.Draw_or_play.For_testing.all_mocked
+    ~play_targeted_target:(Player_name.of_string_exn "Somebody")
     ~double:[ Powerless Cattermelon, Player_name.of_string_exn "Somebody" ]
     ~triple:
       [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
@@ -18,10 +19,11 @@ let print_parse_table ~format_f =
     Action.Draw_or_play.(
       function
       | Draw -> "draw"
-      | Play Attack -> "attack"
-      | Play See_the_future -> "see the future"
-      | Play Skip -> "skip"
-      | Play Shuffle -> "shuffle"
+      | Play_targeted (Favor, target) -> [%string "favor@%{target#Player_name}"]
+      | Play_targetless Attack -> "attack"
+      | Play_targetless See_the_future -> "see the future"
+      | Play_targetless Skip -> "skip"
+      | Play_targetless Shuffle -> "shuffle"
       | Double (card, target) ->
         [%string "double %{card#Card}@%{target#Player_name}"]
       | Triple (card, target, target_card) ->
@@ -48,9 +50,10 @@ let%expect_test "able to parse all lowercase" =
     {|
     (parse_table
      (Ok
-      ((draw Draw) (attack (Play Attack))
-       ("see the future" (Play See_the_future)) (shuffle (Play Shuffle))
-       (skip (Play Skip))
+      ((draw Draw) (attack (Play_targetless Attack))
+       ("see the future" (Play_targetless See_the_future))
+       (shuffle (Play_targetless Shuffle)) (skip (Play_targetless Skip))
+       (favor@somebody (Play_targeted (Favor somebody)))
        ("double cattermelon@somebody"
         (Double ((Powerless Cattermelon) somebody)))
        ("triple cattermelon@somebody@defuse"
@@ -64,9 +67,10 @@ let%expect_test "able to parse all UPPERCASE" =
     {|
     (parse_table
      (Ok
-      ((DRAW Draw) (ATTACK (Play Attack))
-       ("SEE THE FUTURE" (Play See_the_future)) (SHUFFLE (Play Shuffle))
-       (SKIP (Play Skip))
+      ((DRAW Draw) (ATTACK (Play_targetless Attack))
+       ("SEE THE FUTURE" (Play_targetless See_the_future))
+       (SHUFFLE (Play_targetless Shuffle)) (SKIP (Play_targetless Skip))
+       (FAVOR@SOMEBODY (Play_targeted (Favor SOMEBODY)))
        ("DOUBLE CATTERMELON@SOMEBODY"
         (Double ((Powerless Cattermelon) SOMEBODY)))
        ("TRIPLE CATTERMELON@SOMEBODY@DEFUSE"
@@ -80,9 +84,10 @@ let%expect_test "able to parse Titlecase" =
     {|
     (parse_table
      (Ok
-      ((Draw Draw) (Attack (Play Attack))
-       ("See the future" (Play See_the_future)) (Shuffle (Play Shuffle))
-       (Skip (Play Skip))
+      ((Draw Draw) (Attack (Play_targetless Attack))
+       ("See the future" (Play_targetless See_the_future))
+       (Shuffle (Play_targetless Shuffle)) (Skip (Play_targetless Skip))
+       (Favor@Somebody (Play_targeted (Favor Somebody)))
        ("Double Cattermelon@Somebody"
         (Double ((Powerless Cattermelon) Somebody)))
        ("Triple Cattermelon@Somebody@Defuse"
@@ -95,14 +100,19 @@ let%expect_test "unable to parse unknown action" =
   [%expect
     {|
     (action
-     (Error ("Card.Power.of_string: invalid string" (value "unknown action"))))
+     (Error
+      ("Card.Power.Targetless.of_string: invalid string"
+       (value "unknown action"))))
     |}]
 ;;
 
 let%expect_test "unable to parse ill-formed double due to missing string" =
   action_of_string_and_print "double";
   [%expect
-    {| (action (Error ("Card.Power.of_string: invalid string" (value double)))) |}]
+    {|
+    (action
+     (Error ("Card.Power.Targetless.of_string: invalid string" (value double))))
+    |}]
 ;;
 
 let%expect_test "unable to parse ill-formed double due to missing fields" =

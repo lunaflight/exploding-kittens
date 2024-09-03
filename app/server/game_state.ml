@@ -86,15 +86,17 @@ let eliminate_current_player
       }
 ;;
 
-(* TODO-someday: If the number of callbacks becomes too high (> 5?), consider
-   linting a [Callbacks.t] type. *)
+(* TODO-soon: Consider linting a [Callbacks.t] type. *)
 let advance
   (instant : Instant.t)
+  ~get_card_to_give
   ~get_draw_or_play
   ~get_exploding_kitten_insert_position
   ~on_outcome
   =
   let current_player = Turn_order.current_player instant.turn_order in
+  (* TODO-someday: Given the reduplication of [on_outcome] and updating of
+     game state after, there may be some room for refactoring here.*)
   match Instant.next_step instant with
   (* TODO-someday: Eliminating players can be more robust - they need not be at
      the front of the queue. *)
@@ -105,6 +107,31 @@ let advance
     |> Ongoing
     |> return
   | Pass_turn -> Instant.pass_turn instant |> Ongoing |> return
+  | Receive_card_from target ->
+    let%bind outcome, player_hands =
+      Deferred.repeat_until_finished None (fun reprompt_context ->
+        (* This is fine, as [target] is a known player. *)
+        let hand =
+          Player_hands.hand_exn instant.player_hands ~player_name:target
+        in
+        let%map card =
+          get_card_to_give ~player_name:target ~hand ~reprompt_context
+        in
+        match
+          Action.Give_a_card.handle
+            ~player_hands:instant.player_hands
+            ~receiver:current_player
+            ~target
+            ~card
+        with
+        | Error error ->
+          `Repeat
+            (Some [%string "Received error: %{Error.to_string_hum error}"])
+        | Ok result -> `Finished result)
+    in
+    let%map () = on_outcome ~turn_order:instant.turn_order ~outcome in
+    Ongoing
+      { instant with player_hands; next_step = Next_step.of_outcome outcome }
   | Insert_exploding_kitten ->
     let%bind position =
       get_exploding_kitten_insert_position
@@ -122,14 +149,13 @@ let advance
       Player_hands.hand_exn instant.player_hands ~player_name:current_player
     in
     (* TODO-soon: It might be a good idea to refactor this interaction part
-       elsewhere. It detracts from the main purpose of this function. *)
+       elsewhere. It detracts from the main purpose of this function. This
+       construct is reused in this function, so reduplication needs to be
+       reconsidered. *)
     let%bind outcome, player_hands, deck =
       Deferred.repeat_until_finished None (fun reprompt_context ->
         let%map action =
-          get_draw_or_play
-            ~player_name:(Turn_order.current_player instant.turn_order)
-            ~hand
-            ~reprompt_context
+          get_draw_or_play ~player_name:current_player ~hand ~reprompt_context
         in
         match
           Action.Draw_or_play.handle
@@ -151,6 +177,7 @@ let advance
 
 let start_advancing
   game_state
+  ~get_card_to_give
   ~get_draw_or_play
   ~on_initial_load
   ~on_outcome
@@ -169,6 +196,7 @@ let start_advancing
         let%map game_state =
           advance
             instant
+            ~get_card_to_give
             ~get_draw_or_play
             ~get_exploding_kitten_insert_position
             ~on_outcome
@@ -180,6 +208,7 @@ let start_advancing
 
 let start_game
   ~connector
+  ~get_card_to_give
   ~get_draw_or_play
   ~get_exploding_kitten_insert_position
   ~on_initial_load
@@ -209,6 +238,7 @@ let start_game
     Monitor.try_with_or_error (fun () ->
       start_advancing
         game_state
+        ~get_card_to_give
         ~get_draw_or_play
         ~get_exploding_kitten_insert_position
         ~on_initial_load

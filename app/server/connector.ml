@@ -24,6 +24,12 @@ let of_connections connections =
 let player_names = Map.keys
 let to_connection t ~player_name = Map.find_or_error t player_name
 
+let get_card_to_give t ~player_name ~hand =
+  let open Deferred.Or_error.Let_syntax in
+  let%bind connection = to_connection t ~player_name |> Deferred.return in
+  Rpc.Rpc.dispatch Rpcs.Get_card_to_give.rpc connection hand
+;;
+
 let get_draw_or_play t ~player_name ~hand =
   let open Deferred.Or_error.Let_syntax in
   let%bind connection = to_connection t ~player_name |> Deferred.return in

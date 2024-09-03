@@ -6,7 +6,9 @@ type t =
   | Drew_safely of Card.t
   | Exploded
   | Failed_to_steal_via_triple of (Card.t * Player_name.t * Card.t)
+  | Favored of Player_name.t
   | Inserted_exploding_kitten of int
+  | Received_card_from of (Card.t * Player_name.t)
   | Saw_the_future of Card.t list
   | Shuffled
   | Skipped
@@ -35,6 +37,13 @@ let fill_uncensored_alert_template t ~player_name ~possessive_pronoun =
     [%string
       "%{player_name#Player_name} played a(n) %{card#Card} triple and failed \
        to steal a(n) %{target_card#Card} from %{target#Player_name}."]
+  | Favored target ->
+    [%string
+      "%{player_name#Player_name} asked %{target#Player_name} for a favor."]
+  | Received_card_from (card, target) ->
+    [%string
+      "%{player_name#Player_name} received a(n) %{card#Card} from \
+       %{target#Player_name}."]
   | Saw_the_future cards ->
     let cards_string =
       List.map cards ~f:Card.to_string |> String.concat ~sep:", "
@@ -87,10 +96,23 @@ let to_specialised_alert t ~player_name =
   | Saw_the_future _
   | Shuffled
   | Skipped -> None
+  (* TODO-soon: Reduce reduplication here. *)
   | Failed_to_steal_via_triple (card, target, target_card) ->
     ( target
     , (card, Player_name.of_string_exn "you", target_card)
       |> Failed_to_steal_via_triple
+      |> to_uncensored_alert ~player_name )
+    |> Some
+  | Favored target ->
+    ( target
+    , Player_name.of_string_exn "you"
+      |> Favored
+      |> to_uncensored_alert ~player_name )
+    |> Some
+  | Received_card_from (card, target) ->
+    ( target
+    , (card, Player_name.of_string_exn "you")
+      |> Received_card_from
       |> to_uncensored_alert ~player_name )
     |> Some
   | Stole_randomly_via_double (card, target, stolen_card) ->
@@ -113,6 +135,7 @@ let to_censored_alert t ~player_name =
   | Defused
   | Exploded
   | Failed_to_steal_via_triple _
+  | Favored _
   | Shuffled
   | Skipped
   | Stole_via_triple _ -> to_uncensored_alert t ~player_name
@@ -120,6 +143,9 @@ let to_censored_alert t ~player_name =
   | Inserted_exploding_kitten _position ->
     [%string
       "%{player_name#Player_name} inserted an exploding kitten somewhere."]
+  | Received_card_from (_card, target) ->
+    [%string
+      "%{player_name#Player_name} received a card from %{target#Player_name}."]
     (* TODO-soon: Upon death, players should be able to see their hand. *)
   | Saw_the_future cards ->
     let n_cards =
@@ -140,7 +166,9 @@ module For_testing = struct
   let all_mocked
     ~drew_safely
     ~failed_to_steal_via_triple
+    ~favored
     ~inserted_exploding_kitten
+    ~received_card_from
     ~saw_the_future
     ~stole_randomly_via_double
     ~stole_via_triple
@@ -153,8 +181,11 @@ module For_testing = struct
       ~exploded:Variants_helper.accumulate_without_args
       ~failed_to_steal_via_triple:
         (Variants_helper.accumulate_with_args ~args:failed_to_steal_via_triple)
+      ~favored:(Variants_helper.accumulate_with_args ~args:favored)
       ~inserted_exploding_kitten:
         (Variants_helper.accumulate_with_args ~args:inserted_exploding_kitten)
+      ~received_card_from:
+        (Variants_helper.accumulate_with_args ~args:received_card_from)
       ~saw_the_future:
         (Variants_helper.accumulate_with_args ~args:saw_the_future)
       ~skipped:Variants_helper.accumulate_without_args

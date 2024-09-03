@@ -29,10 +29,11 @@ module Without_exploding_kittens = struct
       init_with_counts ~count_of_card:(function
         | Defuse -> if player_cnt <= 3 then 2 else 6 - player_cnt
         | Exploding_kitten -> 0
-        | Power Attack -> 4
-        | Power See_the_future -> 5
-        | Power Skip -> 4
-        | Power Shuffle -> 4
+        | Power (Targetless Attack) -> 4
+        | Power (Targetless See_the_future) -> 5
+        | Power (Targetless Skip) -> 4
+        | Power (Targetless Shuffle) -> 4
+        | Power (Targeted Favor) -> 4
         | Powerless Beard_cat -> 4
         | Powerless Cattermelon -> 4
         | Powerless Hairy_potato_cat -> 4

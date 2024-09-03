@@ -26,6 +26,17 @@ val broadcast_dealt_player_hands_exn
   -> player_hands:Player_hands.t
   -> unit Deferred.t
 
+(** Sends an RPC to the [player_name] to ask for an [Card.t] to give up from
+    [hand].
+    No validation for the validity of [Card.t] is done, hence reprompting
+    is required and described by [reprompt_context]. *)
+val get_card_to_give_exn
+  :  Connector.t
+  -> player_name:Player_name.t
+  -> hand:Hand.t
+  -> reprompt_context:string option
+  -> Card.t Deferred.t
+
 (** Sends an RPC to the [player_name] to ask for an [Action.t].
     No validation for the validity of [Action.t] is done, hence reprompting
     is required and described by [reprompt_context]. *)

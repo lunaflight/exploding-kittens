@@ -178,13 +178,19 @@ let%expect_test "default with 2 players -> contains 2 defuses and looks right" =
     {|
     (deck
      (Ok
-      (Defuse Defuse (Power Attack) (Power Attack) (Power Attack) (Power Attack)
-       (Power See_the_future) (Power See_the_future) (Power See_the_future)
-       (Power See_the_future) (Power See_the_future) (Power Shuffle)
-       (Power Shuffle) (Power Shuffle) (Power Shuffle) (Power Skip) (Power Skip)
-       (Power Skip) (Power Skip) (Powerless Beard_cat) (Powerless Beard_cat)
-       (Powerless Beard_cat) (Powerless Beard_cat) (Powerless Cattermelon)
-       (Powerless Cattermelon) (Powerless Cattermelon) (Powerless Cattermelon)
+      (Defuse Defuse (Power (Targetless Attack)) (Power (Targetless Attack))
+       (Power (Targetless Attack)) (Power (Targetless Attack))
+       (Power (Targetless See_the_future)) (Power (Targetless See_the_future))
+       (Power (Targetless See_the_future)) (Power (Targetless See_the_future))
+       (Power (Targetless See_the_future)) (Power (Targetless Shuffle))
+       (Power (Targetless Shuffle)) (Power (Targetless Shuffle))
+       (Power (Targetless Shuffle)) (Power (Targetless Skip))
+       (Power (Targetless Skip)) (Power (Targetless Skip))
+       (Power (Targetless Skip)) (Power (Targeted Favor))
+       (Power (Targeted Favor)) (Power (Targeted Favor)) (Power (Targeted Favor))
+       (Powerless Beard_cat) (Powerless Beard_cat) (Powerless Beard_cat)
+       (Powerless Beard_cat) (Powerless Cattermelon) (Powerless Cattermelon)
+       (Powerless Cattermelon) (Powerless Cattermelon)
        (Powerless Hairy_potato_cat) (Powerless Hairy_potato_cat)
        (Powerless Hairy_potato_cat) (Powerless Hairy_potato_cat)
        (Powerless Rainbow_ralphing_cat) (Powerless Rainbow_ralphing_cat)
@@ -200,13 +206,19 @@ let%expect_test "default with 5 players -> contains 1 defuse and looks right" =
     {|
     (deck
      (Ok
-      (Defuse (Power Attack) (Power Attack) (Power Attack) (Power Attack)
-       (Power See_the_future) (Power See_the_future) (Power See_the_future)
-       (Power See_the_future) (Power See_the_future) (Power Shuffle)
-       (Power Shuffle) (Power Shuffle) (Power Shuffle) (Power Skip) (Power Skip)
-       (Power Skip) (Power Skip) (Powerless Beard_cat) (Powerless Beard_cat)
-       (Powerless Beard_cat) (Powerless Beard_cat) (Powerless Cattermelon)
-       (Powerless Cattermelon) (Powerless Cattermelon) (Powerless Cattermelon)
+      (Defuse (Power (Targetless Attack)) (Power (Targetless Attack))
+       (Power (Targetless Attack)) (Power (Targetless Attack))
+       (Power (Targetless See_the_future)) (Power (Targetless See_the_future))
+       (Power (Targetless See_the_future)) (Power (Targetless See_the_future))
+       (Power (Targetless See_the_future)) (Power (Targetless Shuffle))
+       (Power (Targetless Shuffle)) (Power (Targetless Shuffle))
+       (Power (Targetless Shuffle)) (Power (Targetless Skip))
+       (Power (Targetless Skip)) (Power (Targetless Skip))
+       (Power (Targetless Skip)) (Power (Targeted Favor))
+       (Power (Targeted Favor)) (Power (Targeted Favor)) (Power (Targeted Favor))
+       (Powerless Beard_cat) (Powerless Beard_cat) (Powerless Beard_cat)
+       (Powerless Beard_cat) (Powerless Cattermelon) (Powerless Cattermelon)
+       (Powerless Cattermelon) (Powerless Cattermelon)
        (Powerless Hairy_potato_cat) (Powerless Hairy_potato_cat)
        (Powerless Hairy_potato_cat) (Powerless Hairy_potato_cat)
        (Powerless Rainbow_ralphing_cat) (Powerless Rainbow_ralphing_cat)
@@ -254,15 +266,17 @@ let%expect_test "deal 2 cards from non-empty deck -> hand and deck look right" =
       (Deck.Without_exploding_kittens.For_testing.of_card_list
          [ Defuse
          ; Powerless Cattermelon
-         ; Power Skip
-         ; Power See_the_future
+         ; Power (Targetless Skip)
+         ; Power (Targetless See_the_future)
          ; Powerless Tacocat
          ])
     ~n:2;
   [%expect
     {|
     ((hand ((Defuse 1) ((Powerless Cattermelon) 1)))
-     (deck ((Power Skip) (Power See_the_future) (Powerless Tacocat))))
+     (deck
+      ((Power (Targetless Skip)) (Power (Targetless See_the_future))
+       (Powerless Tacocat))))
     |}]
 ;;
 
@@ -273,16 +287,17 @@ let%expect_test "deal all cards from non-empty deck -> hand and deck look right"
       (Deck.Without_exploding_kittens.For_testing.of_card_list
          [ Defuse
          ; Powerless Cattermelon
-         ; Power Skip
-         ; Power See_the_future
+         ; Power (Targetless Skip)
+         ; Power (Targetless See_the_future)
          ; Powerless Tacocat
          ])
     ~n:5;
   [%expect
     {|
     ((hand
-      ((Defuse 1) ((Power See_the_future) 1) ((Power Skip) 1)
-       ((Powerless Cattermelon) 1) ((Powerless Tacocat) 1)))
+      ((Defuse 1) ((Power (Targetless See_the_future)) 1)
+       ((Power (Targetless Skip)) 1) ((Powerless Cattermelon) 1)
+       ((Powerless Tacocat) 1)))
      (deck ()))
     |}]
 ;;
@@ -293,8 +308,8 @@ let%expect_test "deal cards more than deck size -> error" =
       (Deck.Without_exploding_kittens.For_testing.of_card_list
          [ Defuse
          ; Powerless Cattermelon
-         ; Power Skip
-         ; Power See_the_future
+         ; Power (Targetless Skip)
+         ; Power (Targetless See_the_future)
          ; Powerless Tacocat
          ])
     ~n:6;

@@ -7,10 +7,16 @@ let all_mocked_outcomes =
     ~inserted_exploding_kitten:[ -10; -1; 0; 1; 10 ]
     ~failed_to_steal_via_triple:
       [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
+    ~favored:[ Player_name.of_string_exn "Somebody" ]
+    ~received_card_from:
+      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody" ]
     ~saw_the_future:
       [ []
       ; [ Exploding_kitten ]
-      ; [ Powerless Tacocat; Power Skip; Power See_the_future ]
+      ; [ Powerless Tacocat
+        ; Power (Targetless Skip)
+        ; Power (Targetless See_the_future)
+        ]
       ]
     ~stole_via_triple:
       [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
@@ -38,6 +44,7 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
       (Failed_to_steal_via_triple ((Powerless Cattermelon) Somebody Defuse)))
      (alert
       "You played a(n) Cattermelon triple and failed to steal a(n) Defuse from Somebody."))
+    ((outcome (Favored Somebody)) (alert "You asked Somebody for a favor."))
     ((outcome (Inserted_exploding_kitten -10))
      (alert "You inserted an exploding kitten at position -10."))
     ((outcome (Inserted_exploding_kitten -1))
@@ -48,12 +55,16 @@ let%expect_test "outcome alerts for self look correct - full feedback is given" 
      (alert "You inserted an exploding kitten at position 1."))
     ((outcome (Inserted_exploding_kitten 10))
      (alert "You inserted an exploding kitten at position 10."))
+    ((outcome (Received_card_from ((Powerless Cattermelon) Somebody)))
+     (alert "You received a(n) Cattermelon from Somebody."))
     ((outcome (Saw_the_future ()))
      (alert "You did not see any cards as the deck is empty."))
     ((outcome (Saw_the_future (Exploding_kitten)))
      (alert "You saw 1 card at the top of the deck: Exploding Kitten."))
     ((outcome
-      (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
+      (Saw_the_future
+       ((Powerless Tacocat) (Power (Targetless Skip))
+        (Power (Targetless See_the_future)))))
      (alert
       "You saw 3 cards at the top of the deck: Tacocat, Skip, See The Future."))
     ((outcome Shuffled) (alert "You shuffled the deck."))
@@ -87,6 +98,7 @@ let%expect_test "outcome alerts for spectators look correct - same as \
       (Failed_to_steal_via_triple ((Powerless Cattermelon) Somebody Defuse)))
      (alert
       "Alice played a(n) Cattermelon triple and failed to steal a(n) Defuse from Somebody."))
+    ((outcome (Favored Somebody)) (alert "Alice asked Somebody for a favor."))
     ((outcome (Inserted_exploding_kitten -10))
      (alert "Alice inserted an exploding kitten at position -10."))
     ((outcome (Inserted_exploding_kitten -1))
@@ -97,12 +109,16 @@ let%expect_test "outcome alerts for spectators look correct - same as \
      (alert "Alice inserted an exploding kitten at position 1."))
     ((outcome (Inserted_exploding_kitten 10))
      (alert "Alice inserted an exploding kitten at position 10."))
+    ((outcome (Received_card_from ((Powerless Cattermelon) Somebody)))
+     (alert "Alice received a(n) Cattermelon from Somebody."))
     ((outcome (Saw_the_future ()))
      (alert "Alice did not see any cards as the deck is empty."))
     ((outcome (Saw_the_future (Exploding_kitten)))
      (alert "Alice saw 1 card at the top of the deck: Exploding Kitten."))
     ((outcome
-      (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
+      (Saw_the_future
+       ((Powerless Tacocat) (Power (Targetless Skip))
+        (Power (Targetless See_the_future)))))
      (alert
       "Alice saw 3 cards at the top of the deck: Tacocat, Skip, See The Future."))
     ((outcome Shuffled) (alert "Alice shuffled the deck."))
@@ -136,6 +152,7 @@ let%expect_test "outcome alerts for others look correct - sensitive info is \
       (Failed_to_steal_via_triple ((Powerless Cattermelon) Somebody Defuse)))
      (alert
       "Alice played a(n) Cattermelon triple and failed to steal a(n) Defuse from Somebody."))
+    ((outcome (Favored Somebody)) (alert "Alice asked Somebody for a favor."))
     ((outcome (Inserted_exploding_kitten -10))
      (alert "Alice inserted an exploding kitten somewhere."))
     ((outcome (Inserted_exploding_kitten -1))
@@ -146,12 +163,16 @@ let%expect_test "outcome alerts for others look correct - sensitive info is \
      (alert "Alice inserted an exploding kitten somewhere."))
     ((outcome (Inserted_exploding_kitten 10))
      (alert "Alice inserted an exploding kitten somewhere."))
+    ((outcome (Received_card_from ((Powerless Cattermelon) Somebody)))
+     (alert "Alice received a card from Somebody."))
     ((outcome (Saw_the_future ()))
      (alert "Alice saw the future of 0 cards at the top of the deck."))
     ((outcome (Saw_the_future (Exploding_kitten)))
      (alert "Alice saw the future of 1 card at the top of the deck."))
     ((outcome
-      (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
+      (Saw_the_future
+       ((Powerless Tacocat) (Power (Targetless Skip))
+        (Power (Targetless See_the_future)))))
      (alert "Alice saw the future of 3 cards at the top of the deck."))
     ((outcome Shuffled) (alert "Alice shuffled the deck."))
     ((outcome Skipped) (alert "Alice skipped their turn."))
@@ -193,15 +214,21 @@ let%expect_test "specialised outcome alerts and recipients look correct - full \
      (player Somebody)
      (alert
       "Alice played a(n) Cattermelon triple and failed to steal a(n) Defuse from you."))
+    ((outcome (Favored Somebody)) (player Somebody)
+     (alert "Alice asked you for a favor."))
     ((outcome (Inserted_exploding_kitten -10)) "<no specialised alert>")
     ((outcome (Inserted_exploding_kitten -1)) "<no specialised alert>")
     ((outcome (Inserted_exploding_kitten 0)) "<no specialised alert>")
     ((outcome (Inserted_exploding_kitten 1)) "<no specialised alert>")
     ((outcome (Inserted_exploding_kitten 10)) "<no specialised alert>")
+    ((outcome (Received_card_from ((Powerless Cattermelon) Somebody)))
+     (player Somebody) (alert "Alice received a(n) Cattermelon from you."))
     ((outcome (Saw_the_future ())) "<no specialised alert>")
     ((outcome (Saw_the_future (Exploding_kitten))) "<no specialised alert>")
     ((outcome
-      (Saw_the_future ((Powerless Tacocat) (Power Skip) (Power See_the_future))))
+      (Saw_the_future
+       ((Powerless Tacocat) (Power (Targetless Skip))
+        (Power (Targetless See_the_future)))))
      "<no specialised alert>")
     ((outcome Shuffled) "<no specialised alert>")
     ((outcome Skipped) "<no specialised alert>")

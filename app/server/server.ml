@@ -35,6 +35,7 @@ let command =
             the spot. *)
          Game_state.start_game
            ~connector
+           ~get_card_to_give:(Interaction.get_card_to_give_exn connector)
            ~get_draw_or_play:(Interaction.get_draw_or_play_exn connector)
            ~get_exploding_kitten_insert_position:
              (Interaction.get_exploding_kitten_insert_position_exn connector)

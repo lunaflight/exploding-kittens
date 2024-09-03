@@ -7,6 +7,9 @@ let all_mocked_outcomes =
     ~inserted_exploding_kitten:[ 0 ]
     ~failed_to_steal_via_triple:
       [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
+    ~favored:[ Player_name.of_string_exn "Somebody" ]
+    ~received_card_from:
+      [ Powerless Cattermelon, Player_name.of_string_exn "Somebody" ]
     ~saw_the_future:[ [] ]
     ~stole_via_triple:
       [ Powerless Cattermelon, Player_name.of_string_exn "Somebody", Defuse ]
@@ -32,7 +35,10 @@ let%expect_test "next step of outcomes" =
     ((outcome
       (Failed_to_steal_via_triple ((Powerless Cattermelon) Somebody Defuse)))
      (next_step Draw_or_play))
+    ((outcome (Favored Somebody)) (next_step (Receive_card_from Somebody)))
     ((outcome (Inserted_exploding_kitten 0)) (next_step Pass_turn))
+    ((outcome (Received_card_from ((Powerless Cattermelon) Somebody)))
+     (next_step Draw_or_play))
     ((outcome (Saw_the_future ())) (next_step Draw_or_play))
     ((outcome Shuffled) (next_step Draw_or_play))
     ((outcome Skipped) (next_step Pass_turn))

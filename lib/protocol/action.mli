@@ -4,7 +4,9 @@ open! Async
 module Draw_or_play : sig
   type t =
     | Draw
-    | Play of Card.Power.t
+    | Play_targetless of Card.Power.Targetless.t
+    | Play_targeted of (Card.Power.Targeted.t * Player_name.t)
+    (** Contains the target [Player_name.t]. *)
     | Double of (Card.t * Player_name.t)
     (** Contains the doubled [Card.t], followed by the target [Player_name.t]. *)
     | Triple of (Card.t * Player_name.t * Card.t)
@@ -30,11 +32,11 @@ module Draw_or_play : sig
   (* TODO-someday: Accomodate shortened forms or unique prefixes of an
      action. *)
   val of_string : string -> t Or_error.t
-  val to_string : t -> string
 
   module For_testing : sig
     val all_mocked
-      :  double:(Card.t * Player_name.t) list
+      :  play_targeted_target:Player_name.t
+      -> double:(Card.t * Player_name.t) list
       -> triple:(Card.t * Player_name.t * Card.t) list
       -> t list
   end
@@ -44,4 +46,17 @@ module Insert_exploding_kitten : sig
   (** Returns the outcome and updated deck given the [position] of insertion.
       Refer to [Deck.insert] for more details. *)
   val handle : position:int -> deck:Deck.t -> Outcome.t * Deck.t
+end
+
+module Give_a_card : sig
+  (** Gives a [card] from [target] to [receiver] and returns the [Outcome.t] and the updated [Player_hands.t].
+      An error is returned if:
+      - [card] is not owned by [target]
+      - [receiver] and [target] are the same. *)
+  val handle
+    :  player_hands:Player_hands.t
+    -> receiver:Player_name.t
+    -> target:Player_name.t
+    -> card:Card.t
+    -> (Outcome.t * Player_hands.t) Or_error.t
 end

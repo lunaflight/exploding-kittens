@@ -2,14 +2,30 @@ open! Core
 open! Async
 
 module Power : sig
+  module Targetless : sig
+    type t =
+      | Attack
+      | See_the_future
+      | Shuffle
+      | Skip
+    [@@deriving bin_io, enumerate, sexp]
+
+    val of_string_or_error : string -> t Or_error.t
+    val to_string : t -> string
+  end
+
+  module Targeted : sig
+    type t = Favor [@@deriving bin_io, enumerate, sexp]
+
+    val of_string_or_error : string -> t Or_error.t
+    val to_string : t -> string
+  end
+
   type t =
-    | Attack
-    | See_the_future
-    | Shuffle
-    | Skip
+    | Targetless of Targetless.t
+    | Targeted of Targeted.t
   [@@deriving bin_io, enumerate, sexp]
 
-  val of_string_exn : string -> t
   val of_string_or_error : string -> t Or_error.t
   val to_string : t -> string
 end

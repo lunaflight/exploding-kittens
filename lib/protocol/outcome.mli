@@ -8,7 +8,9 @@ type t =
   | Failed_to_steal_via_triple of (Card.t * Player_name.t * Card.t)
   (** Encompasses the played card, followed by the target, followed by the
       target card attempted to be stolen. *)
+  | Favored of Player_name.t
   | Inserted_exploding_kitten of int
+  | Received_card_from of (Card.t * Player_name.t)
   | Saw_the_future of Card.t list
   | Shuffled
   | Skipped
@@ -52,7 +54,9 @@ module For_testing : sig
   val all_mocked
     :  drew_safely:Card.t list
     -> failed_to_steal_via_triple:(Card.t * Player_name.t * Card.t) list
+    -> favored:Player_name.t list
     -> inserted_exploding_kitten:int list
+    -> received_card_from:(Card.t * Player_name.t) list
     -> saw_the_future:Card.t list list
     -> stole_randomly_via_double:(Card.t * Player_name.t * Card.t) list
     -> stole_via_triple:(Card.t * Player_name.t * Card.t) list

@@ -25,6 +25,9 @@ val init
     Returns an error if [player_name] is unknown or if they are eliminated. *)
 val hand_or_error : t -> player_name:Player_name.t -> Hand.t Or_error.t
 
+(** Equivalent to [hand_or_error ... |> Or_error.is_ok]. *)
+val is_playing : t -> player_name:Player_name.t -> bool
+
 (** See [hand_or_error] for when it will throw an exception. *)
 val hand_exn : t -> player_name:Player_name.t -> Hand.t
 

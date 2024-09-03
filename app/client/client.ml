@@ -13,7 +13,9 @@ let command =
          Rpc.Implementations.create_exn
            ~on_unknown_rpc:`Close_connection
            ~implementations:
-             [ Rpc.Rpc.implement Rpcs.Get_draw_or_play.rpc (fun _client hand ->
+             [ Rpc.Rpc.implement Rpcs.Get_card_to_give.rpc (fun _client hand ->
+                 Logic.get_card_to_give ~hand)
+             ; Rpc.Rpc.implement Rpcs.Get_draw_or_play.rpc (fun _client hand ->
                  Logic.get_draw_or_play ~hand)
              ; Rpc.Rpc.implement
                  Rpcs.Get_exploding_kitten_insert_position.rpc

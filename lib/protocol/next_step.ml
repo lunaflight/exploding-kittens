@@ -6,6 +6,7 @@ type t =
   | Give_turns_via_attacking
   | Insert_exploding_kitten
   | Pass_turn
+  | Receive_card_from of Player_name.t
 [@@deriving sexp_of]
 
 let of_outcome =
@@ -16,6 +17,8 @@ let of_outcome =
     | Drew_safely _ -> Pass_turn
     | Exploded -> Eliminate_player
     | Failed_to_steal_via_triple _ -> Draw_or_play
+    | Favored target -> Receive_card_from target
+    | Received_card_from _ -> Draw_or_play
     | Inserted_exploding_kitten _ -> Pass_turn
     | Saw_the_future _ -> Draw_or_play
     | Skipped -> Pass_turn

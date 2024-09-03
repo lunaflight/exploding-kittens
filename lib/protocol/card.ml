@@ -2,11 +2,41 @@ open! Core
 open! Async
 
 module Power = struct
+  module Targetless = struct
+    type t =
+      | Attack
+      | See_the_future
+      | Shuffle
+      | Skip
+    [@@deriving
+      bin_io
+      , compare
+      , enumerate
+      , sexp
+      , string ~capitalize:"Title Case" ~case_insensitive]
+
+    let of_string_or_error string =
+      Or_error.try_with (fun () -> of_string string)
+    ;;
+  end
+
+  module Targeted = struct
+    type t = Favor
+    [@@deriving
+      bin_io
+      , compare
+      , enumerate
+      , sexp
+      , string ~capitalize:"Title Case" ~case_insensitive]
+
+    let of_string_or_error string =
+      Or_error.try_with (fun () -> of_string string)
+    ;;
+  end
+
   type t =
-    | Attack
-    | See_the_future
-    | Shuffle
-    | Skip
+    | Targetless of Targetless.t [@nested ""]
+    | Targeted of Targeted.t [@nested ""]
   [@@deriving
     bin_io
     , compare
@@ -14,11 +44,7 @@ module Power = struct
     , sexp
     , string ~capitalize:"Title Case" ~case_insensitive]
 
-  let of_string_exn = of_string
-
-  let of_string_or_error string =
-    Or_error.try_with (fun () -> of_string_exn string)
-  ;;
+  let of_string_or_error string = Or_error.try_with (fun () -> of_string string)
 end
 
 module Powerless = struct

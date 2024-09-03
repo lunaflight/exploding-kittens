@@ -30,6 +30,15 @@ let get ~prelude ~prompt ~input_hint ~of_string_or_error =
        | Ok result -> `Finished result)
 ;;
 
+let get_card_to_give ~hand =
+  (* TODO-soon: Analyze which cards are givable and output them. *)
+  get
+    ~prelude:[%string "Your hand: %{hand#Hand}"]
+    ~prompt:[%string "Provide a card to give"]
+    ~input_hint:"CARD"
+    ~of_string_or_error:Card.of_string_or_error
+;;
+
 let get_draw_or_play ~hand =
   (* TODO-soon: Analyze which actions are playable and output them. *)
   get

@@ -198,7 +198,7 @@ let add_card_and_print player_hands ~name ~card =
 let%expect_test "add tacocat to A -> ok" =
   add_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"A"
     ~card:(Powerless Tacocat);
@@ -207,14 +207,14 @@ let%expect_test "add tacocat to A -> ok" =
     (player_hands
      (Ok
       ((A (Playing ((Defuse 1) ((Powerless Tacocat) 1))))
-       (B (Playing (((Power Skip) 1)))))))
+       (B (Playing (((Power (Targetless Skip)) 1)))))))
     |}]
 ;;
 
 let%expect_test "add tacocat to A only matching by case -> ok" =
   add_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"a"
     ~card:(Powerless Tacocat);
@@ -223,14 +223,14 @@ let%expect_test "add tacocat to A only matching by case -> ok" =
     (player_hands
      (Ok
       ((a (Playing ((Defuse 1) ((Powerless Tacocat) 1))))
-       (B (Playing (((Power Skip) 1)))))))
+       (B (Playing (((Power (Targetless Skip)) 1)))))))
     |}]
 ;;
 
 let%expect_test "add tacocat to A only matching by case -> ok" =
   add_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"a"
     ~card:(Powerless Tacocat);
@@ -239,14 +239,14 @@ let%expect_test "add tacocat to A only matching by case -> ok" =
     (player_hands
      (Ok
       ((a (Playing ((Defuse 1) ((Powerless Tacocat) 1))))
-       (B (Playing (((Power Skip) 1)))))))
+       (B (Playing (((Power (Targetless Skip)) 1)))))))
     |}]
 ;;
 
 let%expect_test "add tacocat to unknown player -> error" =
   add_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"unknown_player"
     ~card:(Powerless Tacocat);
@@ -255,7 +255,9 @@ let%expect_test "add tacocat to unknown player -> error" =
     (player_hands
      (Error
       (("Could not find player name" (player_name unknown_player)
-        (t ((A (Playing ((Defuse 1)))) (B (Playing (((Power Skip) 1)))))))
+        (t
+         ((A (Playing ((Defuse 1))))
+          (B (Playing (((Power (Targetless Skip)) 1)))))))
        ("key not found" unknown_player))))
     |}]
 ;;
@@ -263,7 +265,7 @@ let%expect_test "add tacocat to unknown player -> error" =
 let%expect_test "add tacocat to eliminated player -> error" =
   add_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[ "eliminated_player" ])
     ~name:"eliminated_player"
     ~card:(Powerless Tacocat);
@@ -288,46 +290,56 @@ let remove_card_and_print player_hands ~name ~card ~n =
 let%expect_test "remove defuse from A -> ok" =
   remove_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"A"
     ~card:Defuse
     ~n:1;
   [%expect
-    {| (player_hands (Ok ((A (Playing ())) (B (Playing (((Power Skip) 1))))))) |}]
+    {|
+    (player_hands
+     (Ok ((A (Playing ())) (B (Playing (((Power (Targetless Skip)) 1)))))))
+    |}]
 ;;
 
 let%expect_test "remove multiple defuses from A -> ok" =
   remove_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse; Defuse; Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:
+         [ "A", [ Defuse; Defuse; Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"A"
     ~card:Defuse
     ~n:3;
   [%expect
-    {| (player_hands (Ok ((A (Playing ())) (B (Playing (((Power Skip) 1))))))) |}]
+    {|
+    (player_hands
+     (Ok ((A (Playing ())) (B (Playing (((Power (Targetless Skip)) 1)))))))
+    |}]
 ;;
 
 let%expect_test "remove unowned card from A -> error" =
   remove_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"A"
-    ~card:(Power See_the_future)
+    ~card:(Power (Targetless See_the_future))
     ~n:1;
   [%expect
     {|
     (player_hands
-     (Error ("Card is not owned" (t ((Defuse 1))) (card (Power See_the_future)))))
+     (Error
+      ("Card is not owned" (t ((Defuse 1)))
+       (card (Power (Targetless See_the_future))))))
     |}]
 ;;
 
 let%expect_test "remove too many defuses from A -> error" =
   remove_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse; Defuse; Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:
+         [ "A", [ Defuse; Defuse; Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"A"
     ~card:Defuse
@@ -342,7 +354,7 @@ let%expect_test "remove too many defuses from A -> error" =
 let%expect_test "remove card from unknown player -> error" =
   remove_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"unknown_player"
     ~card:(Powerless Tacocat)
@@ -352,7 +364,9 @@ let%expect_test "remove card from unknown player -> error" =
     (player_hands
      (Error
       (("Could not find player name" (player_name unknown_player)
-        (t ((A (Playing ((Defuse 1)))) (B (Playing (((Power Skip) 1)))))))
+        (t
+         ((A (Playing ((Defuse 1))))
+          (B (Playing (((Power (Targetless Skip)) 1)))))))
        ("key not found" unknown_player))))
     |}]
 ;;
@@ -360,7 +374,7 @@ let%expect_test "remove card from unknown player -> error" =
 let%expect_test "remove card from eliminated player -> error" =
   remove_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[ "eliminated_player" ])
     ~name:"eliminated_player"
     ~card:(Powerless Tacocat)
@@ -385,21 +399,23 @@ let set_hand_and_print player_hands ~name ~hand =
 let%expect_test "set hand of A -> ok" =
   set_hand_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"A"
     ~hand:(Hand.of_cards [ Exploding_kitten ]);
   [%expect
     {|
     (player_hands
-     (Ok ((A (Playing ((Exploding_kitten 1)))) (B (Playing (((Power Skip) 1)))))))
+     (Ok
+      ((A (Playing ((Exploding_kitten 1))))
+       (B (Playing (((Power (Targetless Skip)) 1)))))))
     |}]
 ;;
 
 let%expect_test "set hand of unknown player -> error" =
   set_hand_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"unknown_player"
     ~hand:(Hand.of_cards [ Exploding_kitten ]);
@@ -408,7 +424,9 @@ let%expect_test "set hand of unknown player -> error" =
     (player_hands
      (Error
       (("Could not find player name" (player_name unknown_player)
-        (t ((A (Playing ((Defuse 1)))) (B (Playing (((Power Skip) 1)))))))
+        (t
+         ((A (Playing ((Defuse 1))))
+          (B (Playing (((Power (Targetless Skip)) 1)))))))
        ("key not found" unknown_player))))
     |}]
 ;;
@@ -416,7 +434,7 @@ let%expect_test "set hand of unknown player -> error" =
 let%expect_test "set hand of eliminated player -> error" =
   set_hand_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[ "eliminated_player" ])
     ~name:"eliminated_player"
     ~hand:(Hand.of_cards [ Exploding_kitten ]);
@@ -441,26 +459,27 @@ let transfer_card_and_print player_hands ~receiver ~target ~card =
 let%expect_test "transfer card from B to A -> ok" =
   transfer_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~receiver:"A"
     ~target:"B"
-    ~card:(Power Skip);
+    ~card:(Power (Targetless Skip));
   [%expect
     {|
     (player_hands
-     (Ok ((A (Playing ((Defuse 1) ((Power Skip) 1)))) (B (Playing ())))))
+     (Ok
+      ((A (Playing ((Defuse 1) ((Power (Targetless Skip)) 1)))) (B (Playing ())))))
     |}]
 ;;
 
 let%expect_test "transfer card from A to A -> error" =
   transfer_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~receiver:"A"
     ~target:"A"
-    ~card:(Power Skip);
+    ~card:(Power (Targetless Skip));
   [%expect
     {|
     (player_hands
@@ -471,11 +490,11 @@ let%expect_test "transfer card from A to A -> error" =
 let%expect_test "receiver unknown -> error" =
   transfer_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~receiver:"unknown_player"
     ~target:"B"
-    ~card:(Power Skip);
+    ~card:(Power (Targetless Skip));
   [%expect
     {|
     (player_hands
@@ -489,17 +508,19 @@ let%expect_test "receiver unknown -> error" =
 let%expect_test "target unknown -> error" =
   transfer_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~receiver:"A"
     ~target:"unknown_player"
-    ~card:(Power Skip);
+    ~card:(Power (Targetless Skip));
   [%expect
     {|
     (player_hands
      (Error
       (("Could not find player name" (player_name unknown_player)
-        (t ((A (Playing ((Defuse 1)))) (B (Playing (((Power Skip) 1)))))))
+        (t
+         ((A (Playing ((Defuse 1))))
+          (B (Playing (((Power (Targetless Skip)) 1)))))))
        ("key not found" unknown_player))))
     |}]
 ;;
@@ -511,19 +532,22 @@ let%expect_test "target has does not own the card -> error" =
        ~eliminated_names:[])
     ~receiver:"A"
     ~target:"B"
-    ~card:(Power Skip);
+    ~card:(Power (Targetless Skip));
   [%expect
-    {| (player_hands (Error ("Card is not owned" (t ()) (card (Power Skip))))) |}]
+    {|
+    (player_hands
+     (Error ("Card is not owned" (t ()) (card (Power (Targetless Skip))))))
+    |}]
 ;;
 
 let%expect_test "receiver is eliminated -> error" =
   transfer_card_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "B", [ Power Skip ] ]
+       ~name_and_cards:[ "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[ "A" ])
     ~receiver:"A"
     ~target:"B"
-    ~card:(Power Skip);
+    ~card:(Power (Targetless Skip));
   [%expect
     {| (player_hands (Error ("Player is eliminated" (player_name A)))) |}]
 ;;
@@ -535,7 +559,7 @@ let%expect_test "target is eliminated -> error" =
        ~eliminated_names:[ "B" ])
     ~receiver:"A"
     ~target:"B"
-    ~card:(Power Skip);
+    ~card:(Power (Targetless Skip));
   [%expect
     {| (player_hands (Error ("Player is eliminated" (player_name B)))) |}]
 ;;
@@ -560,15 +584,15 @@ let transfer_random_card_deterministically_and_print
 let%expect_test "transfer card from B to A -> ok" =
   transfer_random_card_deterministically_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~receiver:"A"
     ~target:"B";
   [%expect
     {|
-    ((card (Power Skip))
+    ((card (Power (Targetless Skip)))
      (player_hands
-      ((A (Playing ((Defuse 1) ((Power Skip) 1)))) (B (Playing ())))))
+      ((A (Playing ((Defuse 1) ((Power (Targetless Skip)) 1)))) (B (Playing ())))))
     |}]
 ;;
 
@@ -594,27 +618,33 @@ let eliminate_and_print player_hands ~name =
 let%expect_test "eliminate playing A -> ok" =
   eliminate_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"A";
   [%expect
-    {| (player_hands (Ok ((A Eliminated) (B (Playing (((Power Skip) 1))))))) |}]
+    {|
+    (player_hands
+     (Ok ((A Eliminated) (B (Playing (((Power (Targetless Skip)) 1)))))))
+    |}]
 ;;
 
 let%expect_test "eliminate eliminated A -> ok, nothing happens" =
   eliminate_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "B", [ Power Skip ] ]
+       ~name_and_cards:[ "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[ "A" ])
     ~name:"A";
   [%expect
-    {| (player_hands (Ok ((A Eliminated) (B (Playing (((Power Skip) 1))))))) |}]
+    {|
+    (player_hands
+     (Ok ((A Eliminated) (B (Playing (((Power (Targetless Skip)) 1)))))))
+    |}]
 ;;
 
 let%expect_test "eliminate unknown player -> error" =
   eliminate_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power Skip ] ]
+       ~name_and_cards:[ "A", [ Defuse ]; "B", [ Power (Targetless Skip) ] ]
        ~eliminated_names:[])
     ~name:"unknown_player";
   [%expect
@@ -622,7 +652,9 @@ let%expect_test "eliminate unknown player -> error" =
     (player_hands
      (Error
       (("Could not find player name" (player_name unknown_player)
-        (t ((A (Playing ((Defuse 1)))) (B (Playing (((Power Skip) 1)))))))
+        (t
+         ((A (Playing ((Defuse 1))))
+          (B (Playing (((Power (Targetless Skip)) 1)))))))
        ("key not found" unknown_player))))
     |}]
 ;;
@@ -635,7 +667,8 @@ let to_playing_alist_and_print player_hands =
 let%expect_test "alist ignores eliminated players and looks ok" =
   to_playing_alist_and_print
     (player_hands_of_alist
-       ~name_and_cards:[ "A", []; "B", [ Power Skip; Defuse ] ]
+       ~name_and_cards:[ "A", []; "B", [ Power (Targetless Skip); Defuse ] ]
        ~eliminated_names:[ "ignored_eliminated_player" ]);
-  [%expect {| (alist ((A ()) (B ((Defuse 1) ((Power Skip) 1))))) |}]
+  [%expect
+    {| (alist ((A ()) (B ((Defuse 1) ((Power (Targetless Skip)) 1))))) |}]
 ;;

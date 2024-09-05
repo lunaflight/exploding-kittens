@@ -86,8 +86,7 @@ let to_self_alert t =
     ~possessive_pronoun:"your"
 ;;
 
-let to_specialised_alert t ~player_name =
-  match t with
+let target = function
   | Attacked
   | Defused
   | Drew_safely _
@@ -96,37 +95,36 @@ let to_specialised_alert t ~player_name =
   | Saw_the_future _
   | Shuffled
   | Skipped -> None
-  (* TODO-soon: Reduce reduplication here. *)
-  | Failed_to_steal_via_triple (card, target, target_card) ->
-    ( target
-    , (card, Player_name.of_string_exn "you", target_card)
-      |> Failed_to_steal_via_triple
-      |> to_uncensored_alert ~player_name )
-    |> Some
-  | Favored target ->
-    ( target
-    , Player_name.of_string_exn "you"
-      |> Favored
-      |> to_uncensored_alert ~player_name )
-    |> Some
-  | Received_card_from (card, target) ->
-    ( target
-    , (card, Player_name.of_string_exn "you")
-      |> Received_card_from
-      |> to_uncensored_alert ~player_name )
-    |> Some
-  | Stole_randomly_via_double (card, target, stolen_card) ->
-    ( target
-    , (card, Player_name.of_string_exn "you", stolen_card)
-      |> Stole_randomly_via_double
-      |> to_uncensored_alert ~player_name )
-    |> Some
-  | Stole_via_triple (card, target, stolen_card) ->
-    ( target
-    , (card, Player_name.of_string_exn "you", stolen_card)
-      |> Stole_via_triple
-      |> to_uncensored_alert ~player_name )
-    |> Some
+  | Failed_to_steal_via_triple (_, target, _)
+  | Favored target
+  | Received_card_from (_, target)
+  | Stole_randomly_via_double (_, target, _)
+  | Stole_via_triple (_, target, _) -> Some target
+;;
+
+let to_specialised_alert t ~player_name =
+  let you = Player_name.of_string_exn "you" in
+  let rename_target_to_you t =
+    match t with
+    | Attacked
+    | Defused
+    | Drew_safely _
+    | Exploded
+    | Inserted_exploding_kitten _
+    | Saw_the_future _
+    | Shuffled
+    | Skipped -> t
+    | Failed_to_steal_via_triple (card, _target, target_card) ->
+      Failed_to_steal_via_triple (card, you, target_card)
+    | Favored _target -> Favored you
+    | Received_card_from (card, _target) -> Received_card_from (card, you)
+    | Stole_randomly_via_double (card, _target, stolen_card) ->
+      Stole_randomly_via_double (card, you, stolen_card)
+    | Stole_via_triple (card, _target, stolen_card) ->
+      Stole_via_triple (card, you, stolen_card)
+  in
+  let%map.Option target = target t in
+  target, rename_target_to_you t |> to_uncensored_alert ~player_name
 ;;
 
 let to_censored_alert t ~player_name =

@@ -26,30 +26,11 @@ type t =
     are too few or too many connections. Refer to
     [Deck.default_without_exploding_kittens].
 
-    Additional callback function parameters describe how the server should
-    handle the event described by the name. Functions from [Interaction] should
-    help in filling these out.
+    [Callbacks.t] describes how the server should handle the event described by
+    the name in the field.
 
     The [Deferred.t] becomes determined when there is a winner. *)
 val start_game
   :  connector:Connector.t
-  -> get_card_to_give:
-       (player_name:Player_name.t
-        -> hand:Hand.t
-        -> reprompt_context:string option
-        -> Card.t Deferred.t)
-  -> get_draw_or_play:
-       (player_name:Player_name.t
-        -> hand:Hand.t
-        -> reprompt_context:string option
-        -> Action.Draw_or_play.t Deferred.t)
-  -> get_exploding_kitten_insert_position:
-       (player_name:Player_name.t -> deck_size:int -> int Deferred.t)
-  -> on_initial_load:(player_hands:Player_hands.t -> unit Deferred.t)
-  -> on_outcome:
-       (turn_order:Turn_order.t -> outcome:Outcome.t -> unit Deferred.t)
-  -> on_win:
-       (winner:Player_name.t
-        -> spectators:Player_name.t list
-        -> unit Deferred.t)
+  -> callbacks:Callbacks.t
   -> unit Or_error.t Deferred.t

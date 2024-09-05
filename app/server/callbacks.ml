@@ -2,6 +2,25 @@ open! Core
 open! Async
 open Protocol_lib
 
+type t =
+  { get_card_to_give :
+      player_name:Player_name.t
+      -> hand:Hand.t
+      -> reprompt_context:string option
+      -> Card.t Deferred.t
+  ; get_draw_or_play :
+      player_name:Player_name.t
+      -> hand:Hand.t
+      -> reprompt_context:string option
+      -> Action.Draw_or_play.t Deferred.t
+  ; get_exploding_kitten_insert_position :
+      player_name:Player_name.t -> deck_size:int -> int Deferred.t
+  ; on_initial_load : player_hands:Player_hands.t -> unit Deferred.t
+  ; on_outcome : turn_order:Turn_order.t -> outcome:Outcome.t -> unit Deferred.t
+  ; on_win :
+      winner:Player_name.t -> spectators:Player_name.t list -> unit Deferred.t
+  }
+
 let send_message connector ~players ~message ~ignore_errors =
   Deferred.Or_error.List.iter
     ~how:(`Max_concurrent_jobs 16)
@@ -147,4 +166,15 @@ let get_exploding_kitten_insert_position connector ~player_name ~deck_size =
 let get_exploding_kitten_insert_position_exn connector ~player_name ~deck_size =
   get_exploding_kitten_insert_position connector ~player_name ~deck_size
   |> Deferred.Or_error.ok_exn
+;;
+
+let default ~connector =
+  { get_card_to_give = get_card_to_give_exn connector
+  ; get_draw_or_play = get_draw_or_play_exn connector
+  ; get_exploding_kitten_insert_position =
+      get_exploding_kitten_insert_position_exn connector
+  ; on_initial_load = broadcast_dealt_player_hands_exn connector
+  ; on_outcome = broadcast_outcome_to_players_exn connector
+  ; on_win = broadcast_win_exn connector
+  }
 ;;

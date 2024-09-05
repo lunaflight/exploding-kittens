@@ -86,13 +86,21 @@ let eliminate_current_player
       }
 ;;
 
-(* TODO-soon: Consider linting a [Callbacks.t] type. *)
 let advance
   (instant : Instant.t)
-  ~get_card_to_give
-  ~get_draw_or_play
-  ~get_exploding_kitten_insert_position
-  ~on_outcome
+  ~callbacks:
+    ({ get_card_to_give
+     ; get_draw_or_play
+     ; get_exploding_kitten_insert_position
+     ; on_initial_load = (_ : player_hands:Player_hands.t -> unit Deferred.t)
+     ; on_outcome
+     ; on_win =
+         (_ :
+           winner:Player_name.t
+           -> spectators:Player_name.t list
+           -> unit Deferred.t)
+     } :
+      Callbacks.t)
   =
   let current_player = Turn_order.current_player instant.turn_order in
   (* TODO-someday: Given the reduplication of [on_outcome] and updating of
@@ -175,46 +183,24 @@ let advance
     Ongoing { instant with next_step = Next_step.of_outcome outcome }
 ;;
 
-let start_advancing
-  game_state
-  ~get_card_to_give
-  ~get_draw_or_play
-  ~on_initial_load
-  ~on_outcome
-  ~on_win
-  ~get_exploding_kitten_insert_position
-  =
+let start_advancing game_state ~(callbacks : Callbacks.t) =
   let%bind () =
     match game_state with
     | Winner _ -> Deferred.return ()
-    | Ongoing instant -> on_initial_load ~player_hands:instant.player_hands
+    | Ongoing instant ->
+      callbacks.on_initial_load ~player_hands:instant.player_hands
   in
   let%bind winner, spectators =
     Deferred.repeat_until_finished game_state (function
       | Winner (player, spectators) -> `Finished (player, spectators) |> return
       | Ongoing instant ->
-        let%map game_state =
-          advance
-            instant
-            ~get_card_to_give
-            ~get_draw_or_play
-            ~get_exploding_kitten_insert_position
-            ~on_outcome
-        in
+        let%map game_state = advance instant ~callbacks in
         `Repeat game_state)
   in
-  on_win ~winner ~spectators
+  callbacks.on_win ~winner ~spectators
 ;;
 
-let start_game
-  ~connector
-  ~get_card_to_give
-  ~get_draw_or_play
-  ~get_exploding_kitten_insert_position
-  ~on_initial_load
-  ~on_outcome
-  ~on_win
-  =
+let start_game ~connector ~callbacks =
   let open Deferred.Or_error.Let_syntax in
   let player_names = Connector.player_names connector in
   (* TODO-someday: Provide a way to customise the starting deck and starting
@@ -235,13 +221,5 @@ let start_game
     let%bind game_state =
       init ~deck ~first_player ~other_players |> Deferred.return
     in
-    Monitor.try_with_or_error (fun () ->
-      start_advancing
-        game_state
-        ~get_card_to_give
-        ~get_draw_or_play
-        ~get_exploding_kitten_insert_position
-        ~on_initial_load
-        ~on_outcome
-        ~on_win)
+    Monitor.try_with_or_error (fun () -> start_advancing game_state ~callbacks)
 ;;

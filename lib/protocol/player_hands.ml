@@ -64,10 +64,6 @@ let set_hand t ~player_name ~hand =
   Map.set t ~key:player_name ~data:(Playing hand)
 ;;
 
-let set_hand_exn t ~player_name ~hand =
-  set_hand t ~player_name ~hand |> Or_error.ok_exn
-;;
-
 let add_card t ~player_name ~card =
   let%map.Or_error hand = hand_or_error t ~player_name in
   Map.set t ~key:player_name ~data:(Hand.add_card hand ~card |> Playing)

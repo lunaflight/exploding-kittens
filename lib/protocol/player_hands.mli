@@ -31,14 +31,9 @@ val is_playing : t -> player_name:Player_name.t -> bool
 (** See [hand_or_error] for when it will throw an exception. *)
 val hand_exn : t -> player_name:Player_name.t -> Hand.t
 
-(* TODO-soon: After implementing [Steal], remove what's not needed here. *)
-
 (** Sets [player_name]'s hand to [hand].
     Returns an error if [player_name] is unknown or if they are eliminated. *)
 val set_hand : t -> player_name:Player_name.t -> hand:Hand.t -> t Or_error.t
-
-(** See [set_hand] for when it will throw an exception. *)
-val set_hand_exn : t -> player_name:Player_name.t -> hand:Hand.t -> t
 
 (** Returns an error if [player_name] is unknown or if they are eliminated. *)
 val add_card : t -> player_name:Player_name.t -> card:Card.t -> t Or_error.t

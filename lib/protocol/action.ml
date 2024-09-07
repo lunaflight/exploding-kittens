@@ -10,6 +10,8 @@ module Draw_or_play = struct
     | Triple of (Card.t * Player_name.t * Card.t)
   [@@deriving bin_io, sexp, variants]
 
+  (* TODO-someday: Docs of the regex and the regex pattern should be put
+     in 1 location so we remember to update the docs and regex together. *)
   let format_doc =
     let add_doc acc _v ~doc = doc :: acc in
     Variants.fold
@@ -23,60 +25,70 @@ module Draw_or_play = struct
     |> String.concat ~sep:"|"
   ;;
 
-  (* TODO-soon: This function is getting long. The order is not obvious and
-     hard to maintain.
-     Split the parts out into their
-     own function. We can have a match function that gets the regex pattern of
-     a variant. *)
   let of_string string =
-    match
-      Regex.capture_groups_exn
-        ~case_sensitive:false
-        ~regex:"double (.*)@(.*)"
-        ~string
-    with
-    | Some [ card; target ] ->
-      let%bind.Or_error target = Player_name.of_string_or_error target in
-      let%map.Or_error card = Card.of_string_or_error card in
-      Double (card, target)
-    | None | Some _ ->
-      (match
-         Regex.capture_groups_exn
-           ~case_sensitive:false
-           ~regex:"triple (.*)@(.*)@(.*)"
-           ~string
-       with
-       | Some [ card; target; target_card ] ->
-         let%bind.Or_error card = Card.of_string_or_error card in
-         let%bind.Or_error target = Player_name.of_string_or_error target in
-         let%map.Or_error target_card = Card.of_string_or_error target_card in
-         Triple (card, target, target_card)
-       | None | Some _ ->
-         (match
-            Regex.capture_groups_exn
-              ~case_sensitive:false
-              ~regex:"(.*)@(.*)"
-              ~string
-          with
-          | Some [ targeted_card; target ] ->
+    let parse_and_accumulate acc ({ name; _ } : _ Variant.t) ~regex ~args_to_t =
+      (let%bind.Or_error args =
+         Regex.capture_groups_exn ~case_sensitive:false ~regex ~string
+         |> Or_error.of_option
+              ~error:
+                (Error.create_s
+                   [%message "Did not match regex pattern" (regex : string)])
+       in
+       args_to_t args)
+      |> Or_error.tag_s
+           ~tag:[%message "Could not parse as variant" (name : string)]
+      |> fun hd -> hd :: acc
+    in
+    let unexpected_arg_cnt ~expected_arg_cnt ~args =
+      let arg_cnt = List.length args in
+      Or_error.error_s
+        [%message
+          "Unexpected number of args" (expected_arg_cnt : int) (arg_cnt : int)]
+    in
+    Variants.fold
+      ~init:[]
+      ~draw:
+        (parse_and_accumulate ~regex:"draw" ~args_to_t:(function
+          | [] -> Or_error.return Draw
+          | args -> unexpected_arg_cnt ~expected_arg_cnt:0 ~args))
+      ~play_targetless:
+        (parse_and_accumulate ~regex:"(.*)" ~args_to_t:(function
+          | [ targetless_card ] ->
+            let%map.Or_error targetless_card =
+              Card.Power.Targetless.of_string_or_error targetless_card
+            in
+            Play_targetless targetless_card
+          | args -> unexpected_arg_cnt ~expected_arg_cnt:1 ~args))
+      ~play_targeted:
+        (parse_and_accumulate ~regex:"(.*)@(.*)" ~args_to_t:(function
+          | [ targeted_card; target ] ->
             let%bind.Or_error targeted_card =
               Card.Power.Targeted.of_string_or_error targeted_card
             in
             let%map.Or_error target = Player_name.of_string_or_error target in
             Play_targeted (targeted_card, target)
-          | None | Some _ ->
-            (match
-               Regex.capture_groups_exn
-                 ~case_sensitive:false
-                 ~regex:"draw"
-                 ~string
-             with
-             | Some [] -> Or_error.return Draw
-             | None | Some _ ->
-               let%map.Or_error targetless =
-                 Card.Power.Targetless.of_string_or_error string
-               in
-               Play_targetless targetless)))
+          | args -> unexpected_arg_cnt ~expected_arg_cnt:2 ~args))
+      ~double:
+        (parse_and_accumulate ~regex:"double (.*)@(.*)" ~args_to_t:(function
+          | [ card; target ] ->
+            let%bind.Or_error card = Card.of_string_or_error card in
+            let%map.Or_error target = Player_name.of_string_or_error target in
+            Double (card, target)
+          | args -> unexpected_arg_cnt ~expected_arg_cnt:2 ~args))
+      ~triple:
+        (parse_and_accumulate
+           ~regex:"triple (.*)@(.*)@(.*)"
+           ~args_to_t:(function
+          | [ card; target; target_card ] ->
+            let%bind.Or_error card = Card.of_string_or_error card in
+            let%bind.Or_error target = Player_name.of_string_or_error target in
+            let%map.Or_error target_card =
+              Card.of_string_or_error target_card
+            in
+            Triple (card, target, target_card)
+          | args -> unexpected_arg_cnt ~expected_arg_cnt:3 ~args))
+    |> Or_error.find_ok
+    |> Or_error.tag_s ~tag:[%message "Could not parse string" (string : string)]
   ;;
 
   (* TODO-soon: This function is getting long. Split the parts out into their

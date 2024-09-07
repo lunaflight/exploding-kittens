@@ -101,8 +101,18 @@ let%expect_test "unable to parse unknown action" =
     {|
     (action
      (Error
-      ("Card.Power.Targetless.of_string: invalid string"
-       (value "unknown action"))))
+      (("Could not parse string" (string "unknown action"))
+       (("Could not parse as variant" (name Triple))
+        ("Did not match regex pattern" (regex "triple (.*)@(.*)@(.*)")))
+       (("Could not parse as variant" (name Double))
+        ("Did not match regex pattern" (regex "double (.*)@(.*)")))
+       (("Could not parse as variant" (name Play_targeted))
+        ("Did not match regex pattern" (regex "(.*)@(.*)")))
+       (("Could not parse as variant" (name Play_targetless))
+        ("Card.Power.Targetless.of_string: invalid string"
+         (value "unknown action")))
+       (("Could not parse as variant" (name Draw))
+        ("Did not match regex pattern" (regex draw))))))
     |}]
 ;;
 
@@ -111,23 +121,79 @@ let%expect_test "unable to parse ill-formed double due to missing string" =
   [%expect
     {|
     (action
-     (Error ("Card.Power.Targetless.of_string: invalid string" (value double))))
+     (Error
+      (("Could not parse string" (string double))
+       (("Could not parse as variant" (name Triple))
+        ("Did not match regex pattern" (regex "triple (.*)@(.*)@(.*)")))
+       (("Could not parse as variant" (name Double))
+        ("Did not match regex pattern" (regex "double (.*)@(.*)")))
+       (("Could not parse as variant" (name Play_targeted))
+        ("Did not match regex pattern" (regex "(.*)@(.*)")))
+       (("Could not parse as variant" (name Play_targetless))
+        ("Card.Power.Targetless.of_string: invalid string" (value double)))
+       (("Could not parse as variant" (name Draw))
+        ("Did not match regex pattern" (regex draw))))))
     |}]
 ;;
 
 let%expect_test "unable to parse ill-formed double due to missing fields" =
   action_of_string_and_print "double @";
-  [%expect {| (action (Error ("Invalid player name" (string "")))) |}]
+  [%expect
+    {|
+    (action
+     (Error
+      (("Could not parse string" (string "double @"))
+       (("Could not parse as variant" (name Triple))
+        ("Did not match regex pattern" (regex "triple (.*)@(.*)@(.*)")))
+       (("Could not parse as variant" (name Double))
+        ("Card.T.of_string: invalid string" (value "")))
+       (("Could not parse as variant" (name Play_targeted))
+        ("Card.Power.Targeted.of_string: invalid string" (value "double ")))
+       (("Could not parse as variant" (name Play_targetless))
+        ("Card.Power.Targetless.of_string: invalid string" (value "double @")))
+       (("Could not parse as variant" (name Draw))
+        ("Did not match regex pattern" (regex draw))))))
+    |}]
 ;;
 
 let%expect_test "unable to parse ill-formed double due to non-card" =
   action_of_string_and_print "double noncard@player";
   [%expect
-    {| (action (Error ("Card.T.of_string: invalid string" (value noncard)))) |}]
+    {|
+    (action
+     (Error
+      (("Could not parse string" (string "double noncard@player"))
+       (("Could not parse as variant" (name Triple))
+        ("Did not match regex pattern" (regex "triple (.*)@(.*)@(.*)")))
+       (("Could not parse as variant" (name Double))
+        ("Card.T.of_string: invalid string" (value noncard)))
+       (("Could not parse as variant" (name Play_targeted))
+        ("Card.Power.Targeted.of_string: invalid string"
+         (value "double noncard")))
+       (("Could not parse as variant" (name Play_targetless))
+        ("Card.Power.Targetless.of_string: invalid string"
+         (value "double noncard@player")))
+       (("Could not parse as variant" (name Draw))
+        ("Did not match regex pattern" (regex draw))))))
+    |}]
 ;;
 
 let%expect_test "unable to parse ill-formed triple due to missing fields" =
   action_of_string_and_print "triple @@";
   [%expect
-    {| (action (Error ("Card.T.of_string: invalid string" (value "")))) |}]
+    {|
+    (action
+     (Error
+      (("Could not parse string" (string "triple @@"))
+       (("Could not parse as variant" (name Triple))
+        ("Card.T.of_string: invalid string" (value "")))
+       (("Could not parse as variant" (name Double))
+        ("Did not match regex pattern" (regex "double (.*)@(.*)")))
+       (("Could not parse as variant" (name Play_targeted))
+        ("Card.Power.Targeted.of_string: invalid string" (value "triple @")))
+       (("Could not parse as variant" (name Play_targetless))
+        ("Card.Power.Targetless.of_string: invalid string" (value "triple @@")))
+       (("Could not parse as variant" (name Draw))
+        ("Did not match regex pattern" (regex draw))))))
+    |}]
 ;;

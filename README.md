@@ -7,9 +7,14 @@ This project uses `Core` and `Async` heavily and is created to practice the
 
 ## Running the project
 ### Installation
-You first need OCaml and [Dune](https://dune.build/install) to run this project.
-1. Clone this repository with `git clone`.
-2. Run `dune build` to build the project and install the required dependencies.
+1. Ensure you have [opam](https://opam.ocaml.org/doc/Install.html) and it is
+   [initialised](https://ocaml.org/docs/installing-ocaml#initialise-opam).
+2. Clone this repository with `git clone` and `cd` into it.
+3. Install all dependencies with `opam install --deps-only .`.
+   - Alternatively, `opam install` all dependencies manually as stated in the
+     `depends` section of `exploding_kittens.opam`, including `ocaml` and
+     `dune`.
+4. Run `dune build` to build the project to check that it is successful.
 
 ### Player Command
 This command represents the endpoint for a player and interacts with the game
@@ -36,4 +41,4 @@ Alternatively, read the [official
 PDF](https://www.buffalolib.org/sites/default/files/gaming-unplugged/inst/Exploding%20Kittens%20Instructions.pdf)
 explaining the rules.
 
-Note: Only `Nope` and `Quint` is currently unimplemented from the `PDF`.
+Note: Only `Nope` and `Quint` is currently unimplemented from the above PDF.

@@ -1,3 +1,4 @@
 (executables
  (names player server)
+ (public_names player server)
  (libraries client_app server_app))

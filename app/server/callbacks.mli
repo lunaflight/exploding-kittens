@@ -17,7 +17,8 @@ type t =
       -> Action.Draw_or_play.t Deferred.t
   ; get_exploding_kitten_insert_position :
       player_name:Player_name.t -> deck_size:int -> int Deferred.t
-  ; on_initial_load : player_hands:Player_hands.t -> unit Deferred.t
+  ; on_initial_load :
+      player_hands:Player_hands.t -> turn_order:Turn_order.t -> unit Deferred.t
   ; on_outcome : turn_order:Turn_order.t -> outcome:Outcome.t -> unit Deferred.t
   ; on_win :
       winner:Player_name.t -> spectators:Player_name.t list -> unit Deferred.t

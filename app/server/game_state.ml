@@ -92,7 +92,11 @@ let advance
     ({ get_card_to_give
      ; get_draw_or_play
      ; get_exploding_kitten_insert_position
-     ; on_initial_load = (_ : player_hands:Player_hands.t -> unit Deferred.t)
+     ; on_initial_load =
+         (_ :
+           player_hands:Player_hands.t
+           -> turn_order:Turn_order.t
+           -> unit Deferred.t)
      ; on_outcome
      ; on_win =
          (_ :
@@ -188,7 +192,9 @@ let start_advancing game_state ~(callbacks : Callbacks.t) =
     match game_state with
     | Winner _ -> Deferred.return ()
     | Ongoing instant ->
-      callbacks.on_initial_load ~player_hands:instant.player_hands
+      callbacks.on_initial_load
+        ~player_hands:instant.player_hands
+        ~turn_order:instant.turn_order
   in
   let%bind winner, spectators =
     Deferred.repeat_until_finished game_state (function

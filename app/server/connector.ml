@@ -45,8 +45,11 @@ let get_exploding_kitten_insert_position t ~player_name ~deck_size =
     deck_size
 ;;
 
-let send_message t ~player_name ~message =
+let send_messages t ~player_name ~messages =
   let open Deferred.Or_error.Let_syntax in
   let%bind connection = to_connection t ~player_name |> Deferred.return in
-  Rpc.Rpc.dispatch Rpcs.Message.rpc connection message
+  Deferred.Or_error.List.iter
+    ~how:`Sequential
+    messages
+    ~f:(Rpc.Rpc.dispatch Rpcs.Message.rpc connection)
 ;;

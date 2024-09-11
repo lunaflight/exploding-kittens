@@ -100,6 +100,19 @@ let players
   |> Nonempty_list.to_list
 ;;
 
+let to_string t =
+  let turn_order =
+    players t |> List.map ~f:Player_name.to_string |> String.concat ~sep:" -> "
+  in
+  let spectators =
+    match spectators t with
+    | [] -> "None"
+    | spectators ->
+      List.map spectators ~f:Player_name.to_string |> String.concat ~sep:", "
+  in
+  [%string "Turn order: %{turn_order} | Spectators: %{spectators}"]
+;;
+
 let pass_turn { current_player; waiting_players; spectators } =
   if Player_and_turns.turns current_player <= 1
   then (

@@ -6,6 +6,8 @@ open! Core
     playing. *)
 type t [@@deriving sexp_of]
 
+val to_string : t -> string
+
 (** Initialises [t] with the given [Player_name.t]s. All players start off
     playing with 1 turn each - none of them are spectators.
     The turn order is as follows: [first] goes first, followed by [second],

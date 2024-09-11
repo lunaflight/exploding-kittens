@@ -25,6 +25,32 @@ let create_with_single_turns_exn ~player_names ~spectators =
     ~spectators
 ;;
 
+let create_and_print ~player_name_and_turns ~spectators =
+  create_exn ~player_name_and_turns ~spectators
+  |> Turn_order.to_string
+  |> print_endline
+;;
+
+let%expect_test "string representation looks correct with 0 spectators" =
+  create_and_print ~player_name_and_turns:[ "A", 1; "B", 1 ] ~spectators:[];
+  [%expect {| Turn order: A -> B | Spectators: None |}]
+;;
+
+let%expect_test "string representation looks correct with 1 spectator" =
+  create_and_print
+    ~player_name_and_turns:[ "A", 1; "B", 2; "C", 3 ]
+    ~spectators:[ "spectator" ];
+  [%expect {| Turn order: A -> B -> C | Spectators: spectator |}]
+;;
+
+let%expect_test "string representation looks correct with > 1 spectator" =
+  create_and_print
+    ~player_name_and_turns:[ "A", 1; "B", 2; "C", 3 ]
+    ~spectators:[ "spectator"; "spectator2"; "spectator3" ];
+  [%expect
+    {| Turn order: A -> B -> C | Spectators: spectator, spectator2, spectator3 |}]
+;;
+
 let of_player_names_and_print ~first ~second ~others =
   let turn_order =
     Turn_order.of_player_names

@@ -37,9 +37,9 @@ val get_exploding_kitten_insert_position
   -> deck_size:int
   -> int Or_error.t Deferred.t
 
-(** Sends a message for the player to process via RPC. *)
-val send_message
+(** Sends messages sequentially for the player to process via multiple RPCs. *)
+val send_messages
   :  t
   -> player_name:Player_name.t
-  -> message:string
+  -> messages:string list
   -> unit Or_error.t Deferred.t

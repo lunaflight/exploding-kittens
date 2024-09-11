@@ -15,19 +15,20 @@ type t =
       -> Action.Draw_or_play.t Deferred.t
   ; get_exploding_kitten_insert_position :
       player_name:Player_name.t -> deck_size:int -> int Deferred.t
-  ; on_initial_load : player_hands:Player_hands.t -> unit Deferred.t
+  ; on_initial_load :
+      player_hands:Player_hands.t -> turn_order:Turn_order.t -> unit Deferred.t
   ; on_outcome : turn_order:Turn_order.t -> outcome:Outcome.t -> unit Deferred.t
   ; on_win :
       winner:Player_name.t -> spectators:Player_name.t list -> unit Deferred.t
   }
 
-let send_message connector ~players ~message ~ignore_errors =
+let send_messages connector ~players ~messages ~ignore_errors =
   Deferred.Or_error.List.iter
     ~how:(`Max_concurrent_jobs 16)
     players
     ~f:(fun player_name ->
       let sent_message_response =
-        Connector.send_message connector ~player_name ~message
+        Connector.send_messages connector ~player_name ~messages
       in
       match ignore_errors with
       | false -> sent_message_response
@@ -38,9 +39,13 @@ let send_message connector ~players ~message ~ignore_errors =
            [%log.global.error
              "Attempted to send a message but player disconnected"
                (player_name : Player_name.t)
-               (message : string)
+               (messages : string list)
                (error : Error.t)];
            Or_error.return ()))
+;;
+
+let send_message connector ~players ~message ~ignore_errors =
+  send_messages connector ~players ~messages:[ message ] ~ignore_errors
 ;;
 
 let broadcast_outcome_to_players connector ~turn_order ~outcome =
@@ -107,27 +112,34 @@ let broadcast_win_exn connector ~winner ~spectators =
   broadcast_win connector ~winner ~spectators |> Deferred.Or_error.ok_exn
 ;;
 
-let broadcast_dealt_player_hands connector ~player_hands =
+let broadcast_dealt_player_hands connector ~player_hands ~turn_order =
   Player_hands.to_playing_alist player_hands
   |> Deferred.Or_error.List.iter
        ~how:(`Max_concurrent_jobs 16)
        ~f:(fun (player, hand) ->
-         send_message
+         send_messages
            connector
            ~players:[ player ]
-           ~message:[%string "You have been dealt the following: %{hand#Hand}."]
+           ~messages:
+             [ "The game has started!"
+             ; "Turn order:"
+             ; [%string "    %{turn_order#Turn_order}"]
+             ; "Your hand:"
+             ; [%string "    %{hand#Hand}"]
+             ]
            ~ignore_errors:false)
 ;;
 
-let broadcast_dealt_player_hands_exn connector ~player_hands =
-  broadcast_dealt_player_hands connector ~player_hands
+let broadcast_dealt_player_hands_exn connector ~player_hands ~turn_order =
+  broadcast_dealt_player_hands connector ~player_hands ~turn_order
   |> Deferred.Or_error.ok_exn
 ;;
 
 let send_player_if_some connector ~player_name ~message =
   match message with
   | None -> Deferred.Or_error.return ()
-  | Some message -> Connector.send_message connector ~player_name ~message
+  | Some message ->
+    send_message connector ~players:[ player_name ] ~message ~ignore_errors:true
 ;;
 
 let get_card_to_give connector ~player_name ~hand ~reprompt_context =
